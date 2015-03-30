@@ -41,6 +41,11 @@
 # Python 2.7
 #
 
+# Some app store links...
+# https://itunesconnect.apple.com/WebObjects/iTunesConnect.woa
+# https://play.google.com/apps/publish
+# https://developer.amazon.com/
+# https://appdev.microsoft.com/StorePortals/en-us/account/signup/start
 
 # Set BASH options 
 set -o errexit	# Stop running the script if an error occurs
@@ -87,6 +92,7 @@ unzip -d $downloads "$downloads/cocos2d-js-v3.3.zip"
 #wget $wget_flags http://www.cocos2d-x.org/filedown/cocos2d-x-3.4.zip
 #unzip -d $downloads "$downloads/cocos2d-x-3.4.zip"
 
+# Get the Android parts...
 if [ `uname` = Darwin ] ; then
     # Get various OS X Android parts
     wget $wget_flags http://dl.google.com/android/android-sdk_r24.1.2-macosx.zip

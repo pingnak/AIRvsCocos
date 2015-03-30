@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<application xmlns="http://ns.adobe.com/air/application/17.0">
+    <!--
+        AIR application descriptor elements
+        http://help.adobe.com/en_US/air/build/WSfffb011ac560372f2fea1812938a6e463-8000.html 
+    -->
+    <id>com.evildave.Example</id>
+    <versionNumber>1.0</versionNumber>
+    <versionLabel></versionLabel>
+    <filename>Example</filename>
+    <description>Example App</description>
+    <!-- To localize the description, use the following format for the description element.
+	<description>
+		<text xml:lang="en">English App description goes here</text>
+		<text xml:lang="fr">French App description goes here</text>
+		<text xml:lang="ja">Japanese App description goes here</text>
+	</description>
+	-->
+    <name>Example App</name>
+    <!-- To localize the name, use the following format for the name element.
+	<name>
+		<text xml:lang="en">English App name goes here</text>
+		<text xml:lang="fr">French App name goes here</text>
+		<text xml:lang="ja">Japanese App name goes here</text>
+	</name>
+	-->
+    <copyright></copyright>
+    <initialWindow>
+		<title>Example App</title>
+        <content>Example.swf</content>
+        <systemChrome>standard</systemChrome>
+        <transparent>false</transparent>
+        <visible>true</visible>
+        <fullScreen>true</fullScreen>
+        <autoOrients>false</autoOrients>
+        <aspectRatio>landscape</aspectRatio> <!-- portrait, landscape, or any -->
+        <renderMode>auto</renderMode>
+        <width>500</width> 
+        <height>500</height> 
+    </initialWindow>
+    <customUpdateUI>false</customUpdateUI>
+    <allowBrowserInvocation>false</allowBrowserInvocation>
+	<!-- Setup/Deployment Settings -->
+    <icon>
+        <image36x36>AppIconsForPublish/icon3636.png</image36x36>
+        <image48x48>AppIconsForPublish/icon4848.png</image48x48>
+        <image72x72>AppIconsForPublish/icon7272.png</image72x72>
+    </icon>
+    <android>
+        <!-- This is for that admob extension -->
+        <manifestAdditions><![CDATA[
+			<manifest android:installLocation="auto">
+				
+				<uses-sdk android:minSdkVersion="9" android:targetSdkVersion="19" />
+				
+				<!-- These permissions are required by AdMob -->
+			    <uses-permission android:name="android.permission.INTERNET"/>
+				<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+				
+                <application>
+                    <!-- this meta-data tag is required for AdMob -->
+                    <meta-data android:name="com.google.android.gms.version" android:value="4452000"/>
+                    
+                    <!-- this activity is required for AdMob -->
+                    <activity android:name="com.google.android.gms.ads.AdActivity" android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize" android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
+
+				</application>
+
+			</manifest>
+			
+		]]></manifestAdditions>
+    </android>
+    <extensions>
+    <!-- If you have an extension, list the ane libraries, here.
+        <extensionID>com.milkmangames.extensions.AdMob</extensionID> 
+        <extensionID>com.milkmangames.extensions.GoogleServices</extensionID>
+    -->
+    </extensions>
+</application>

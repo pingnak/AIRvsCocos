@@ -1,0 +1,587 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+
+This is an ant build for Flash and the AIR SDK.
+
+Nothing fancy.
+
+Here's what you'll need:
+    1. Adobe AIR SDK 
+        http://www.adobe.com/devnet/air/air-sdk-download.html
+        
+    2. ANT
+        http://ant.apache.org/bindownload.cgi
+        
+    3. A JAVA Runtime (both for ANT, and for AIR SDK)
+        http://java.com/en/download/manual.jsp
+
+This build.xml assumes the air sdk 'bin' folder is in the PATH environment variable
+
+Some useful links...
+
+Using native extensions for Adobe AIR
+http://help.adobe.com/en_US/air/build/WS597e5dadb9cc1e0253f7d2fc1311b491071-8000.html
+
+Adobe AIR
+http://help.adobe.com/en_US/air/build/index.html	
+
+Using mxmlc, the application compiler
+http://help.adobe.com/en_US/flex/using/WS2db454920e96a9e51e63e3d11c0bf69084-7fcc.html
+
+Using Flash Builder 4.5 to package applications for Apple iOS devices
+http://www.adobe.com/devnet/air/articles/packaging-air-apps-ios.html
+
+Legacy JVM for OS X Mountain lion/Yosemite, for fdb and older versions of many apps
+https://support.apple.com/kb/DL1572?locale=en_US
+
+How to fix AIR SDK fdb, so it 'works'.  
+
+    Once you have it in your path, type 'fdb'.  
+
+    It complains about wanting a 32 bit java runtime...
+
+Edit the 'fdb' and 'asdoc' scripts in the bin folder, wherever you unzipped the AIR SKD.  
+
+Replace the 'java' invocation with a hard-coded path to the java you want.
+
+This will enable the debugger and document generator.
+
+#java $VMARGS $D32 $SETUP_SH_VMARGS -Dapplication.home="$FALCON_HOME" -jar "${FALCON_HOME}/lib/legacy/fdb.jar" "$@"
+/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Commands/java $VMARGS -D32 $SETUP_SH_VMARGS -Dapplication.home="$FALCON_HOME" -jar "${FALCON_HOME}/lib/legacy/fdb.jar" "$@"
+
+
+-->
+<project basedir="." name="${targetname}" default="air" >
+
+	<property file="build.properties"/>
+	<property environment="env" />
+	
+	<!--
+	    Mobile Device Builds
+	-->
+	
+	<macrodef name="macro-build">
+		<attribute name="target"/>		<!-- Where to write swf -->
+		<attribute name="debug"/>		<!-- Debug flag -->
+		<attribute name="release"/>		<!-- Complimentary Release flag -->
+		<attribute name="ios"/>		    <!-- Is IOS -->
+		<attribute name="android"/>		<!-- Is Android -->
+		<attribute name="air"/>		    <!-- Is AIR (PC) -->
+		<attribute name="buildtype"/>	<!-- airmobile -->
+		<sequential>
+			<tstamp />
+			<exec executable="mxmlc" failonerror="true" searchpath="true" > 
+				<arg line="@{buildtype}" />
+
+				<!-- Set conditional compile directives and constants -->
+				<arg value="-compiler.define=CONFIG::FLASH_AUTHORING,false" /> 
+				<arg value="-compiler.define=CONFIG::MXMLC_BUILD,true" />
+				<arg value="-compiler.define=CONFIG::DIKEOUT,false" />
+				<arg value="-compiler.define=CONFIG::DIKEIN,true" />
+				<arg value="-compiler.define=CONFIG::BUILD,${DSTAMP}${TSTAMP}" />
+				<arg value="-compiler.define=CONFIG::WIDE,${app.width}" />
+				<arg value="-compiler.define=CONFIG::HIGH,${app.height}" />
+				
+				<!-- Enable versus disable debug/release mode code -->
+				<arg value="-compiler.define=CONFIG::DEBUG,@{debug}" /> 
+				<arg value="-compiler.define=CONFIG::RELEASE,@{release}" /> 
+
+				<arg value="-compiler.define=CONFIG::MOBILE,true" />
+				<arg value="-compiler.define=CONFIG::IOS,@{ios}" />
+				<arg value="-compiler.define=CONFIG::ANDROID,@{android}" />
+				<arg value="-compiler.define=CONFIG::AIR,@{air}" />
+
+				<!-- Set up debug versus optimize -->
+				<arg line="-compiler.debug=@{debug}" /> 
+				<arg line="-compiler.optimize=@{release}" /> 
+				
+				<!-- Every kind of warning available -->
+				<arg line="-compiler.strict=true" />
+				<arg line="-warnings=true" />
+				<arg line="-compiler.show-actionscript-warnings=true" />
+				<arg line="-compiler.show-binding-warnings=true" />
+				<arg line="-compiler.warn-assignment-within-conditional=true" />
+				<arg line="-compiler.warn-bad-array-cast=true" />
+				<arg line="-compiler.warn-bad-date-cast=true" />
+				<arg line="-compiler.warn-bad-es3-type-method=true" />
+				<arg line="-compiler.warn-bad-es3-type-prop=true" />
+				<arg line="-compiler.warn-bad-nan-comparison=true" />
+				<arg line="-compiler.warn-bad-null-assignment=true" />
+				<arg line="-compiler.warn-bad-null-comparison=true" />
+				<arg line="-compiler.warn-bad-undefined-comparison=true" />
+				<arg line="-compiler.warn-class-is-sealed=true" />
+				<arg line="-compiler.warn-const-not-initialized=true" />
+				<arg line="-compiler.warn-deprecated-function-error=true" />
+				<arg line="-compiler.warn-deprecated-property-error=true" />
+				<arg line="-compiler.warn-duplicate-argument-names=true" />
+				<arg line="-compiler.warn-duplicate-variable-def=true" />
+				<arg line="-compiler.warn-import-hides-class=true" />
+				<arg line="-compiler.warn-internal-error=true" />
+				<arg line="-compiler.warn-level-not-supported=true" />
+				<arg line="-compiler.warn-missing-namespace-decl=true" />
+				<arg line="-compiler.warn-negative-uint-literal=true" />
+				<arg line="-compiler.warn-no-type-decl=true" />
+				<arg line="-compiler.warn-slow-text-field-addition=true" />
+				<arg line="-compiler.warn-unlikely-function-value=true" />
+
+				<!-- Set up Application preferences -->
+				<arg line="-default-size ${app.width} ${app.height}" />
+				<arg line="-default-background-color=#${background.color}" />
+				<arg line="-default-frame-rate=${app.framerate}" />
+
+				<!-- MAIN (must be last on list -->
+				<arg line="--source-path='${source.dir}'" />
+
+				<!-- Our Flash resouce file -->
+				<arg line="-compiler.include-libraries '${resource_swc}'" /> 
+
+				<!-- Add ANE+extensions to project 
+				<arg line="-library-path+='${library.path}'" />
+				-->
+
+				<arg line="-o=@{target}"/>
+				<arg line="-file-specs='${source.file}'" />
+				<arg line="-target-player=${fullplayerversion}" />
+			</exec>
+		</sequential>
+	</macrodef>
+	
+	<!--
+	    iOS Release Build
+	    Jump through Apple's hoops to generate a developer certificate and mobileprovision
+	    Install the developer certificate, and export a p12 for it
+	-->
+    <target name="ios" description="IOS Build" >
+		<sequential>
+			<echo>IOS Release Build...</echo>
+			<macro-build target="${ios.swf.path}" debug="false" release="true" ios="true" android="false" air="false" buildtype="+configname=airmobile" />
+			
+			<delete file="${ios.output}" />
+			<echo>Building IPA...</echo>
+			<exec executable="adt" searchpath="true" vmlauncher="false" failonerror="true" >
+			    <arg line="-package"/>
+				<arg line="-target ipa-ad-hoc"/> <!-- for single-user test: ipa-test -->
+				<arg line="-storetype pkcs12"/>
+				<arg line="-keystore '${ios.certificate}'"/>
+				<arg line="-storepass ${ios.cert.password}"/>
+				<arg line="-provisioning-profile '${ios.mobileprovision}'" />
+				<arg line="${ios.output}"/>		<!-- Output file -->
+				<arg line="${ios.profile}"/>	    <!-- AIR project info -->
+				<!-- Tell adt where to find the .ane files. 
+				<arg line="-extdir '${library.path}'"/>
+				-->
+				<arg line="-C ${ios.deploy}"/>	<!-- Change folder -->
+				<arg line="${ios.swf}"/>
+				<arg line="AppIconsForPublish/icon2929.png"/>
+				<arg line="AppIconsForPublish/icon4848.png"/>
+				<arg line="AppIconsForPublish/icon5757.png"/> 
+				<arg line="AppIconsForPublish/icon7272.png"/>
+				<arg line="AppIconsForPublish/icon114114.png"/>
+				<arg line="AppIconsForPublish/icon512512.png"/>
+				<!-- Add other files/folders to list -->
+			</exec>
+		</sequential>
+	</target>
+
+	<!--
+        http://help.adobe.com/en_US/air/build/WS901d38e593cd1bac1e63e3d128fc240122-8000.html
+        adt -devices -platform iOS
+	-->
+    <target name="runios" description="IOS Build" depends="ios" >
+		<sequential>
+		
+			<!-- http://help.adobe.com/en_US/air/build/WS901d38e593cd1bac1e63e3d128fc240122-7ffa.html 
+			    adt -installApp -platform iOS -device 1 -package ./deploy/iOS/MonkeyPile_iOS.ipa
+			-->
+			<echo>Install...</echo>
+			<exec executable="adt" searchpath="true" vmlauncher="false" failonerror="true" >
+			    <arg line="-installApp"/>
+			    <arg line="-platform iOS"/>
+			    <arg line="-device  ${ios.device}"/>
+			    <arg line="-package ${ios.output}"/>
+			</exec>
+		</sequential>
+    </target>
+
+    <!-- 
+        Pseudo-target to launch for the debugger
+        
+        1. Start fdb in a terminal/shell
+        2. Give it the 'run' command.  It will wait for a connection
+        3. ant rundebug 
+        4. Press 'c' to continue, or set breakepoints, or whatever
+        
+        Adobe's fdb is just like gdb, only worse.
+        
+        This doesn't run it on the iPhone.  
+        
+        It just runs the flash code with flash, intended for iOS, to see if it's borked.
+        
+        http://help.adobe.com/en_US/air/build/WS901d38e593cd1bac35eb7b4e12cddc5fbbb-8000.html
+        
+    -->
+	<target name="debugios" description="Build and run air target in fdb debugger" >
+		<sequential>
+		    <echo>Building iOS app...</echo>
+			<macro-build target="${ios.swf.path}" debug="true" release="false" ios="true" android="false" air="false" buildtype="+configname=airmobile" />
+
+			<delete file="${ios.output}" />
+			<echo>Make debug IPA...</echo>
+			<exec executable="adt" searchpath="true" vmlauncher="false" failonerror="true" >
+			    <arg line="-package"/>
+				<arg line="-target ipa-debug"/>
+				<arg line="-connect ${fdb.ip}"/> <!-- IP address of computer you're running fdb on -->
+				<arg line="-provisioning-profile '${ios.deploy}/${ios.mobileprovision}'" />
+				<arg line="-storetype pkcs12"/>
+				<arg line="-keystore '${ios.deploy}/${ios.certificate}'"/>
+				<arg line="-storepass ${ios.cert.password}"/>
+				<arg line="${ios.output}"/>		<!-- Output file -->
+				<arg line="${ios.profile}"/>	    <!-- AIR project info -->
+				<arg line="-C ${ios.deploy}"/>	<!-- Change folder -->
+				<arg line="${ios.swf}"/>
+				<arg line="AppIconsForPublish/icon2929.png"/>
+				<arg line="AppIconsForPublish/icon4848.png"/>
+				<arg line="AppIconsForPublish/icon5757.png"/> 
+				<arg line="AppIconsForPublish/icon7272.png"/>
+				<arg line="AppIconsForPublish/icon114114.png"/>
+				<arg line="AppIconsForPublish/icon512512.png"/>
+				<!-- Add other files/folders to list -->
+			</exec>
+
+			<!-- http://help.adobe.com/en_US/air/build/WS901d38e593cd1bac1e63e3d128fc240122-7ffa.html 
+			    adt -installApp -platform iOS -device 1 -package ./deploy/iOS/MonkeyPile_iOS.ipa
+			-->
+			<echo>Install...</echo>
+			<exec executable="adt" searchpath="true" vmlauncher="false" failonerror="true" >
+			    <arg line="-installApp"/>
+			    <arg line="-platform iOS"/>
+			    <arg line="-device ${ios.device}"/>
+			    <arg line="-package ${ios.output}"/>
+			</exec>
+
+		    <echo>You'll need to type 'run' in fdb, then launch the app on the iThing.</echo>
+		    <echo>Add any breakpoints and watches, and enter 'c' to continue.</echo>
+		    <echo>If you launch the app on the iThing first, it will prompt for the ip address.</echo>
+
+        </sequential>
+	</target>
+
+	<!-- 
+	    Self-signed Certificate generation for Android 
+	    KEEP THIS CERTIFICATE (or use one that you already made).
+	-->
+	<target name="checkandroidcert" >
+		<available property="androidcert.available" file="${android.certificate}" />
+	</target>
+	<target name="androidcert" description="Build Self-Signed Certificate for Android" unless="androidcert.available" depends="checkandroidcert">
+		<exec executable="adt" searchpath="true" vmlauncher="false" failonerror="true" >
+			<arg line="-certificate"/>
+			<arg line="-cn SelfSigned"/>
+			<arg line="-validityPeriod 25"/>
+			<arg line="2048-RSA"/>
+			<arg line="${android.certificate}"/>
+			<arg line="${android.cert.password}"/>
+		</exec>
+	</target>
+	
+	<!--
+	    Android Release Build
+	    Generates a certificate, if you don't have one.
+	-->
+    <target name="android" description="Android Build" depends="androidcert" >
+		<sequential>
+			<echo>Android Release Build...</echo>
+			<macro-build target="${android.swf.path}" debug="false" release="true" ios="false" android="true" air="false" buildtype="+configname=airmobile"/>
+
+			<delete file="${android.output}" />
+			<echo>Building apk...</echo>
+			<exec executable="adt" searchpath="true" vmlauncher="false" failonerror="true" >
+			    <arg line="-package"/>
+				<arg line="-target apk-captive-runtime"/>
+				<arg line="-storetype pkcs12"/>
+				<arg line="-keystore ${android.certificate}"/>
+				<arg line="-storepass ${android.cert.password}"/>
+				<arg line="${android.output}"/>		<!-- Output file -->
+				<arg line="${android.profile}"/>	    <!-- AIR project info -->
+				<!-- Tell adt where to find the .ane files. -->
+				<arg line="-extdir '${library.path}'"/>
+				<arg line="-C ${android.deploy}"/>	<!-- Change folder -->
+				<arg line="${android.swf}"/>
+				<arg line="AppIconsForPublish/icon3636.png"/>
+				<arg line="AppIconsForPublish/icon4848.png"/>
+				<arg line="AppIconsForPublish/icon7272.png"/>
+				<!-- Add other files/folders to list -->
+			</exec>
+		</sequential>
+	</target>
+
+	<!--
+        http://help.adobe.com/en_US/air/build/WS901d38e593cd1bac1e63e3d128fc240122-8000.html
+        adt -devices -platform Android
+	-->
+    <target name="runandroid" description="Android Build" depends="android" >
+		<sequential>
+		
+			<!-- http://help.adobe.com/en_US/air/build/WS901d38e593cd1bac1e63e3d128fc240122-7ffa.html 
+			    adt -installApp -platform Android -device 1 -package ./deploy/Android/MonkeyPile_Android.ipa
+			-->
+			<echo>Uninstall...</echo>
+			<exec executable="adt" searchpath="true" vmlauncher="false" failonerror="false" >
+			    <arg line="-uninstallApp"/>
+			    <arg line="-platform Android"/>
+			    <arg line="-device ${android.device}"/>
+			    <arg line="-appid ${app.id}"/>
+			</exec>
+			<!--
+			<echo>Install AIR Runtime...</echo>
+			<exec executable="adt" searchpath="true" vmlauncher="false" failonerror="false" >
+			    <arg line="-installRuntime"/>
+			    <arg line="-platform Android"/>
+			    <arg line="-device ${android.device}"/>
+			</exec>
+			-->
+			<echo>Install...</echo>
+			<exec executable="adt" searchpath="true" vmlauncher="false" failonerror="true" >
+			    <arg line="-installApp"/>
+			    <arg line="-platform Android"/>
+			    <arg line="-device ${android.device}"/>
+			    <arg line="-package ${android.output}"/>
+			</exec>
+
+		</sequential>
+    </target>
+
+    <!-- 
+        Pseudo-target to launch for the debugger
+        
+        1. Start fdb in a terminal/shell
+        2. Give it the 'run' command.  It will wait for a connection
+        3. ant rundebug 
+        4. Press 'c' to continue, or set breakepoints, or whatever
+        
+        Adobe's fdb is just like gdb, only worse.
+        
+        This doesn't run it on the iPhone.  
+        
+        It just runs the flash code with flash, intended for Android, to see if it's borked.
+        
+        http://help.adobe.com/en_US/air/build/WS901d38e593cd1bac35eb7b4e12cddc5fbbb-8000.html
+        
+    -->
+	<target name="debugandroid" description="Build and run air target in fdb debugger" >
+		<sequential>
+		    <echo>Building Android app...</echo>
+			<macro-build target="${android.swf.path}" debug="true" release="false" android="true" ios="false" air="false" buildtype="+configname=airmobile" />
+
+			<delete file="${android.output}" />
+			<echo>Make debug APK...</echo>
+			<exec executable="adt" searchpath="true" vmlauncher="false" failonerror="true" >
+			    <arg line="-package"/>
+				<arg line="-target apk-debug"/>
+				<arg line="-connect ${fdb.ip}"/> <!-- IP address of computer you're running fdb on -->
+				<arg line="-storetype pkcs12"/>
+				<arg line="-keystore ${android.certificate}"/>
+				<arg line="-storepass ${android.cert.password}"/>
+				<arg line="${android.output}"/>		<!-- Output file -->
+				<arg line="${android.profile}"/>	    <!-- AIR project info -->
+				<arg line="-C ${android.deploy}"/>	<!-- Change folder -->
+				<arg line="${android.swf}"/>
+				<arg line="AppIconsForPublish/icon3636.png"/>
+				<arg line="AppIconsForPublish/icon4848.png"/>
+				<arg line="AppIconsForPublish/icon7272.png"/>
+				<!-- Add other files/folders to list -->
+			</exec>
+			
+			<!-- http://help.adobe.com/en_US/air/build/WS901d38e593cd1bac1e63e3d128fc240122-7ffa.html 
+			    adt -installApp -platform Android -device 1 -package ./deploy/Android/MonkeyPile_Android.ipa
+			-->
+			<echo>Uninstall...</echo>
+			<exec executable="adt" searchpath="true" vmlauncher="false" failonerror="false" >
+			    <arg line="-uninstallApp"/>
+			    <arg line="-platform Android"/>
+			    <arg line="-device  ${android.device}"/>
+			    <arg line="-appid ${app.id}"/>
+			</exec>
+			<echo>Install...</echo>
+			<exec executable="adt" searchpath="true" vmlauncher="false" failonerror="true" >
+			    <arg line="-installApp"/>
+			    <arg line="-platform Android"/>
+			    <arg line="-device  ${android.device}"/>
+			    <arg line="-package ${android.output}"/>
+			</exec>
+
+		    <echo>You'll need to type 'run' in fdb, then launch the app on the Android thing.</echo>
+		    <echo>Add any breakpoints and watches, and enter 'c' to continue.</echo>
+		    <echo>If you launch the app on the Android thing first, it will prompt for the ip address.</echo>
+
+        </sequential>
+	</target>
+
+
+	<!-- 
+	    Self-signed Certificate generation for AIR app 
+	    KEEP THIS CERTIFICATE (or use one that you already made).
+	-->
+	<target name="checkaircert" >
+		<available property="aircert.available" file="${air.certificate}" />
+	</target>
+	<target name="aircert" description="Build Self-Signed Certificate for Adobe AIR" unless="aircert.available" depends="checkaircert">
+		<exec executable="adt" searchpath="true" vmlauncher="false" failonerror="true" >
+			<arg line="-certificate"/>
+			<arg line="-cn SelfSigned"/>
+			<arg line="-validityPeriod 25"/>
+			<arg line="2048-RSA"/>
+			<arg line="${air.certificate}"/>
+			<arg line="${air.cert.password}"/>
+		</exec>
+	</target>
+
+	<!--
+	    Release mode AIR build
+	-->
+	<target name="air" description="Build AIR Deployable Target" depends="aircert" >
+		<sequential>
+		    <echo>AIR Release Build...</echo>
+			<macro-build target="${air.output.path}" debug="false" release="true" android="false" ios="false" air="true" buildtype="+configname=air" />
+			<delete file="${air.output}" />
+			<echo>AIR Packaging...</echo>
+			<exec executable="adt" searchpath="true" vmlauncher="false" failonerror="true" >
+				<arg line="-package"/>
+				<arg line="-storetype pkcs12"/>	<!-- Our certificate -->
+				<arg line="-storepass ${air.cert.password}"/>
+				<arg line="-keystore ${air.certificate}"/>
+				<arg line="${air.output}"/>		<!-- Output file -->
+				<arg line="${air.profile}"/>	<!-- AIR project info -->
+				<arg line="-C ${air.deploy}"/>	<!-- Change folder -->
+				<arg line="."/> 				<!-- Recursively add everything in deploy -->
+				<!-- Add other files/folders to list -->
+			</exec>
+		</sequential>
+	</target>
+
+	<!--
+	    Run release mode AIR build
+	-->
+    <target name="runair" description="Run AIR Target">
+		<sequential>
+		    <echo>AIR Release Build...</echo>
+			<macro-build target="${air.output.path}" debug="false" release="true" android="false" ios="false" air="true" buildtype="+configname=air" />
+			<echo>Running in AIR...</echo>
+			<exec executable="adl" searchpath="true" vmlauncher="false">
+			    <arg line="-profile desktop" />
+				<arg line="${air.profile}"/>
+				<arg line="${air.deploy}"/>
+			</exec>
+		</sequential>
+	</target>
+	
+    <!-- 
+        Pseudo-target to launch for the debugger
+        
+        1. Start fdb in a terminal/shell
+        2. Give it the 'run' command.  It will wait for a connection
+        3. ant rundebug 
+        4. Press 'c' to continue, or set breakepoints, or whatever
+        
+        Adobe's fdb is just like gdb, only worse.
+    -->
+	<target name="debugair" description="Build and run air target in debugger" >
+		<sequential>
+		    <echo>AIR Debug Build...</echo>
+			<macro-build target="${air.output.path}" debug="true" release="false" android="false" ios="false" air="true" buildtype="+configname=air" />
+
+		    <echo>You needed to run fdb in a shell, then type 'run', first...</echo>
+			
+		    <echo>Launching app...</echo>
+			<exec executable="adl" searchpath="true" vmlauncher="false">
+			    <arg line="-profile desktop" />
+				<arg line="${air.profile}"/>
+				<arg line="${air.deploy}"/>
+			</exec>
+		</sequential>
+	</target>
+
+	<!--
+	    Trace release mode AIR build
+	    
+	    Windows users will need a 'tail' from some GNU project
+	-->
+    <target name="traceair" description="Run debug AIR target outside of debugger" >
+		<sequential>
+		    <echo>AIR Debug Build...</echo>
+			<macro-build target="${air.output.path}" debug="true" release="false" android="false" ios="false" air="true" buildtype="+configname=air" />
+
+			<echo>Running in AIR...</echo>
+			<exec executable="adl" spawn="true" searchpath="true" vmlauncher="false">
+			    <arg line="-profile desktop" />
+				<arg line="${air.profile}"/>
+				<arg line="${air.deploy}"/>
+			</exec>
+			
+			<exec executable="tail" osfamily="MAC" searchpath="true" vmlauncher="false" spawn="false">
+				<arg line="-f '${env.HOME}/Library/Preferences/Macromedia/Flash Player/Logs/flashlog.txt'"/>
+			</exec>
+			<exec executable="tail" os="LINUX" searchpath="true" vmlauncher="false" spawn="false">
+				<arg line="-f ${env.HOME}/.macromedia/Flash_Player/Logs/flashlog.txt"/>
+			</exec>
+			<exec executable="tail" osfamily="WINDOWS" searchpath="true" vmlauncher="false" spawn="false">
+				<arg line="-f ${env.HOMEDRIVE}\${env.HOMEPATH}\Application Data\Macromedia\Flash Player\Logs\flashlog.txt"/>
+			</exec>
+		</sequential>
+	</target>
+	
+	<!--
+	    Zip project up, from this folder
+	-->
+	<target name="zip" description="Make an archive of the project">
+		<sequential>
+			<tstamp />
+			<echo>Archiving project...</echo>
+			<zip destfile="./${targetname}${DSTAMP}${TSTAMP}.zip" level="9" >
+				<fileset dir="." defaultexcludes="true">
+					<!-- Some of these excludes are redundant, but some older versions of ant had problems -->
+					<exclude name="**/.svn/**" />
+					<exclude name="**/CVS/**" />
+					<include name="deploy/**" />
+					<include name="fla/**" />
+					<include name="src/**" />
+					<include name="build.*" />
+				</fileset>
+			</zip>
+		</sequential>		
+	</target>
+
+	<!--
+	    Generate a manual
+	-->
+	<target name="manual" description="Generate documents" >
+		<sequential>
+			<echo>Generating the manual...</echo>
+			<exec executable="asdoc" searchpath="true" vmlauncher="false" failonerror="true" >
+				<arg line="-source-path '${source.dir}'"/>
+				<arg line="-doc-sources '${source.dir}'"/>
+				<arg line="-main-title '${doc.title}'"/>
+				<arg line="-window-title '${doc.title}'"/>
+				<arg line="-target-player='${fullplayerversion}'" />
+				<arg value="-compiler.define=CONFIG::FLASH_AUTHORING,false" /> 
+				<arg value="-compiler.define=CONFIG::MXMLC_BUILD,true" /> 
+				<arg value="-compiler.define=CONFIG::DEBUG,false" /> 
+				<arg value="-compiler.define=CONFIG::RELEASE,true" /> 
+				<arg value="-compiler.define=CONFIG::AIR,true" /> 
+				<arg value="-compiler.define=CONFIG::IOS,false" /> 
+				<arg value="-compiler.define=CONFIG::ANDROID,false" /> 
+				<arg value="-compiler.define=CONFIG::DIKEOUT,false" />
+				<arg value="-compiler.define=CONFIG::DIKEIN,true" />
+				<arg value="-compiler.define=CONFIG::BUILD,0" />
+				<arg line="-output '${doc.dir}'"/>
+			</exec>
+		</sequential>
+	</target>
+
+	<!--
+	    Build all of the targets
+	-->
+    <target name="all" description="Build all targets" depends="air,android,ios" />
+
+</project>
+
