@@ -53,8 +53,14 @@ This will enable the debugger and document generator.
 -->
 <project basedir="." name="${targetname}" default="air" >
 
-	<property file="build.properties"/>
+    <!-- Allow you to override certain, private settings with your own folder in ~/ant/my.build.properties -->
+	<property file="${user.home}\ant\my.build.properties"/>
+
+	<!-- Import from environment -->
 	<property environment="env" />
+
+	<!-- Import build.properties -->
+	<property file="build.properties"/>
 	
 	<!--
 	    Mobile Device Builds
@@ -187,7 +193,7 @@ This will enable the debugger and document generator.
         http://help.adobe.com/en_US/air/build/WS901d38e593cd1bac1e63e3d128fc240122-8000.html
         adt -devices -platform iOS
 	-->
-    <target name="runios" description="IOS Build" depends="ios" >
+    <target name="runios" description="Build and deploy to iOS device" depends="ios" >
 		<sequential>
 		
 			<!-- http://help.adobe.com/en_US/air/build/WS901d38e593cd1bac1e63e3d128fc240122-7ffa.html 
@@ -319,7 +325,7 @@ This will enable the debugger and document generator.
         http://help.adobe.com/en_US/air/build/WS901d38e593cd1bac1e63e3d128fc240122-8000.html
         adt -devices -platform Android
 	-->
-    <target name="runandroid" description="Android Build" depends="android" >
+    <target name="runandroid" description="Run Android target" depends="android" >
 		<sequential>
 		
 			<!-- http://help.adobe.com/en_US/air/build/WS901d38e593cd1bac1e63e3d128fc240122-7ffa.html 
