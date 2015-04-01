@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Install ANT from http://ant.apache.org/bindownload.cgi
+    Basically, unzip it somewhere, and add it to the PATH environment variable
+-->
+<project basedir="." name="Download and Setup" default="setup" >
+
+    <condition property="is.windows">
+        <os family="windows" />
+    </condition>
+    <target name="download.windows" description="Download Windows dependencies" if="is.windows" >
+        <sequential>
+            <echo>Getting Windows Tools...</echo>
+            <!-- verbose='true' is worthless.  Just fills the screen with dots. -->
+            <get dest="depends" skipexisting="true"  >
+                <!-- We're probably not doing anything, if this wasn't downloaded and installed.
+                <url url="https://www.apache.org/dist/ant/binaries/apache-ant-1.9.4-bin.zip"/>
+                -->
+                <url url="https://www.python.org/download/releases/2.7.6/"/>
+                <url url="http://airdownload.adobe.com/air/win/download/latest/AIRSDK_Compiler.zip"/>
+                <url url="http://www.cocos2d-x.org/filedown/cocos2d-js-v3.3.zip"/>
+                <url url="http://dl.google.com/android/android-sdk_r24.1.2-windows.zip"/>
+                <url url="http://dl.google.com/android/ndk/android-ndk-r10d-windows-x86_64.exe"/>
+            </get>
+            <echo>Decompressing...</echo>
+        </sequential>
+    </target>
+    
+    <condition property="is.mac">
+        <and>
+            <os family="mac"/>
+            <os family="unix"/>
+        </and>
+    </condition>
+    <target name="download.mac" description="Download OS X dependencies" if="is.mac" >
+        <sequential>
+            <echo>Getting OS X Tools...</echo>
+            <!-- verbose='true' is worthless.  Just fills the screen with dots. -->
+            <get dest="depends" skipexisting="true" >
+                <!-- We're probably not doing anything, if this wasn't downloaded and installed.
+                <url url="https://www.apache.org/dist/ant/binaries/apache-ant-1.9.4-bin.zip"/>
+                -->
+                <url url="http://airdownload.adobe.com/air/mac/download/latest/AIRSDK_Compiler.tbz2"/>
+                <url url="http://www.cocos2d-x.org/filedown/cocos2d-js-v3.3.zip"/>
+                <url url="http://dl.google.com/android/android-sdk_r24.1.2-macosx.zip"/>
+                <url url="http://dl.google.com/android/ndk/android-ndk-r10d-darwin-x86_64.bin"/>
+            </get>
+            <echo>Decompressing...</echo>
+        </sequential>
+    </target>
+    
+    <condition property="is.linux">
+        <and>
+            <os family="unix"/>
+            <not><os family="mac"/></not>
+        </and>
+    </condition>
+    <target name="download.linux" description="Download Linux dependencies" if="is.linux" >
+        <sequential>
+            <echo>Getting Linux/Unix Tools...</echo>
+            <!-- verbose='true' is worthless.  Just fills the screen with dots. -->
+            <get dest="depends" skipexisting="true"  >
+                <!-- We're probably not doing anything, if this wasn't downloaded and installed.
+                <url url="https://www.apache.org/dist/ant/binaries/apache-ant-1.9.4-bin.zip"/>
+                -->
+                <url url="http://www.apache.org/dyn/closer.cgi?path=/flex/installer/3.1/apache-flex-sdk-installer-3.1.0-src.tar.gz"/>
+                <url url="http://www.cocos2d-x.org/filedown/cocos2d-js-v3.3.zip"/>
+                <url url="http://dl.google.com/android/android-sdk_r24.1.2-linux.tgz"/>
+                <url url="http://dl.google.com/android/ndk/android-ndk-r10d-linux-x86_64.bin"/>
+            </get>
+            <echo>Decompressing...</echo>
+        </sequential>
+    </target>
+
+    <!--
+        Setup: 
+            Depends: Check OS types and invoke the one that matches
+    -->
+    <target name="setup" description="Download Based On OS" depends="download.windows,download.mac,download.linux" >
+    
+    </target>    
+</project>
+
