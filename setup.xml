@@ -5,6 +5,8 @@
 -->
 <project basedir="." name="Download and Setup" default="setup" >
 
+    <property file="setup.properties"/>
+
     <condition property="is.windows">
         <os family="windows" />
     </condition>
@@ -12,38 +14,42 @@
         <sequential>
             <echo>Getting Windows Tools...</echo>
             <!-- verbose='true' is worthless.  Just fills the screen with dots. -->
-            <get dest="depends" skipexisting="true"  >
-                <!-- We're probably not doing anything, if this wasn't downloaded and installed.
-                <url url="https://www.apache.org/dist/ant/binaries/apache-ant-1.9.4-bin.zip"/>
-                -->
-                <url url="https://www.python.org/download/releases/2.7.6/"/>
-                <url url="http://airdownload.adobe.com/air/win/download/latest/AIRSDK_Compiler.zip"/>
-                <url url="http://www.cocos2d-x.org/filedown/cocos2d-js-v3.3.zip"/>
-                <url url="http://dl.google.com/android/android-sdk_r24.1.2-windows.zip"/>
-                <url url="http://dl.google.com/android/ndk/android-ndk-r10d-windows-x86_64.exe"/>
+            <get dest="${depends}" skipexisting="true"  >
+                <url url="${windows.python.url}"/>
+                <url url="${windows.AIRSDK.url}"/>
+                <url url="${windows.cocos2d.url}"/>
+                <url url="${windows.androidsdk.url}"/>
+                <url url="${windows.androidndk.url}"/>
             </get>
-            <echo>Decompressing...</echo>
+            <echo>Extracting...</echo>
+            <unzip src="${depends}/${windows.AIRSDK.filename}" dest="${depends}/${windows.AIRSDK.unpacked}" />
+            <unzip src="${depends}/${windows.cocos2d.filename}" dest="${depends}" />
+            <unzip src="${depends}/{windows.androidsdk.filename}" dest="${depends}" />
+			<!-- Evil self-extracting executable -->
+			<exec executable="${windows.androidndk.filename}" dir="${depends}" failonerror="true" searchpath="false" >
+			</exec>
+			<!-- Launch interactive Python installer -->
+			<exec executable="start" dir="${depends}" failonerror="true" searchpath="true" >
+                <arg line="${windows.python.filename}" /> 
+            </exec>
         </sequential>
     </target>
     
-    <condition property="is.mac">
+    <condition property="is.osx">
         <and>
             <os family="mac"/>
             <os family="unix"/>
         </and>
     </condition>
-    <target name="download.mac" description="Download OS X dependencies" if="is.mac" >
+    <target name="download.osx" description="Download OS X dependencies" if="is.osx" >
         <sequential>
             <echo>Getting OS X Tools...</echo>
             <!-- verbose='true' is worthless.  Just fills the screen with dots. -->
-            <get dest="depends" skipexisting="true" >
-                <!-- We're probably not doing anything, if this wasn't downloaded and installed.
-                <url url="https://www.apache.org/dist/ant/binaries/apache-ant-1.9.4-bin.zip"/>
-                -->
-                <url url="http://airdownload.adobe.com/air/mac/download/latest/AIRSDK_Compiler.tbz2"/>
-                <url url="http://www.cocos2d-x.org/filedown/cocos2d-js-v3.3.zip"/>
-                <url url="http://dl.google.com/android/android-sdk_r24.1.2-macosx.zip"/>
-                <url url="http://dl.google.com/android/ndk/android-ndk-r10d-darwin-x86_64.bin"/>
+            <get dest="${depends}" skipexisting="true" >
+                <url url="${osx.AIRSDK.url}"/>
+                <url url="${osx.cocos2d.url}"/>
+                <url url="${osx.androidsdk.url}"/>
+                <url url="${osx.androidndk.url}"/>
             </get>
             <echo>Decompressing...</echo>
         </sequential>
@@ -59,14 +65,11 @@
         <sequential>
             <echo>Getting Linux/Unix Tools...</echo>
             <!-- verbose='true' is worthless.  Just fills the screen with dots. -->
-            <get dest="depends" skipexisting="true"  >
-                <!-- We're probably not doing anything, if this wasn't downloaded and installed.
-                <url url="https://www.apache.org/dist/ant/binaries/apache-ant-1.9.4-bin.zip"/>
-                -->
-                <url url="http://www.apache.org/dyn/closer.cgi?path=/flex/installer/3.1/apache-flex-sdk-installer-3.1.0-src.tar.gz"/>
-                <url url="http://www.cocos2d-x.org/filedown/cocos2d-js-v3.3.zip"/>
-                <url url="http://dl.google.com/android/android-sdk_r24.1.2-linux.tgz"/>
-                <url url="http://dl.google.com/android/ndk/android-ndk-r10d-linux-x86_64.bin"/>
+            <get dest="${depends}" skipexisting="true"  >
+                <url url="${linux.AIRSDK.url}"/>
+                <url url="${linux.cocos2d.url}"/>
+                <url url="${linux.androidsdk.url}"/>
+                <url url="${linux.androidndk.url}"/>
             </get>
             <echo>Decompressing...</echo>
         </sequential>
@@ -76,7 +79,7 @@
         Setup: 
             Depends: Check OS types and invoke the one that matches
     -->
-    <target name="setup" description="Download Based On OS" depends="download.windows,download.mac,download.linux" >
+    <target name="setup" description="Download Based On OS" depends="download.windows,download.osx,download.linux" >
     
     </target>    
 </project>

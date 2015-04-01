@@ -548,7 +548,7 @@ This will enable the debugger and document generator.
 	<!--
 	    Trace release mode AIR build
 	    
-	    Windows users will need a 'tail' from some GNU project
+	    Windows users will need a 'tail' from some GNU for Windows project
 	-->
     <target name="traceair" description="Run debug AIR target outside of debugger" >
 		<sequential>
@@ -561,13 +561,13 @@ This will enable the debugger and document generator.
 				<arg line="${air.profile}"/>
 				<arg line="${air.deploy}"/>
 			</exec>
-			<exec executable="${AIR.TAIL}" osfamily="MAC" searchpath="true" vmlauncher="false" spawn="false">
+			<exec executable="${GNU.TAIL}" osfamily="MAC" searchpath="true" vmlauncher="false" spawn="false">
 				<arg line="-f '${env.HOME}/Library/Preferences/Macromedia/Flash Player/Logs/flashlog.txt'"/>
 			</exec>
-			<exec executable="${AIR.TAIL}" os="LINUX" searchpath="true" vmlauncher="false" spawn="false">
+			<exec executable="${GNU.TAIL}" os="LINUX" searchpath="true" vmlauncher="false" spawn="false">
 				<arg line="-f ${env.HOME}/.macromedia/Flash_Player/Logs/flashlog.txt"/>
 			</exec>
-			<exec executable="${AIR.TAIL}" osfamily="WINDOWS" searchpath="true" vmlauncher="false" spawn="false">
+			<exec executable="${GNU.TAIL}" osfamily="WINDOWS" searchpath="true" vmlauncher="false" spawn="false">
 				<arg line="-f ${env.HOMEDRIVE}\${env.HOMEPATH}\Application Data\Macromedia\Flash Player\Logs\flashlog.txt"/>
 			</exec>
 		</sequential>
