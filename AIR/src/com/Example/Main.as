@@ -68,6 +68,11 @@ package com.Example
                 OnStage();
             }
             addEventListener( Event.REMOVED_FROM_STAGE, OffStage );
+            
+            
+            addChild( new SmileyHandler() );
+            addChild( new SmileyHandler() );
+            addChild( new SmileyHandler() );
         }
         
         /**
@@ -106,8 +111,7 @@ package com.Example
         **/        
         protected function Cycle(e:Event=null):void
         {
-            if( !bPaused )
-                FSM.Cycle();
+            FSM.Cycle();
         }
         
         /**
