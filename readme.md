@@ -83,6 +83,12 @@ can pick over the bits and pieces you needed.
 
 On the Windows side of things, Cocos2D requires Visual Studio 2012, or later.  
 
+## The Sad Story of Linux + AIR
+
+There isn't one.  At least, not an up-to-date one, with straight-forward 
+installation rules.  So I'm setting that aside, and making sure Cocos2D-js
+works.
+
 ## Version Control
 
 There are folders you shouldn't add to version control. For instance, the
