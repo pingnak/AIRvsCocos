@@ -10,7 +10,13 @@
 
 	<!-- Import settings -->
     <property file="setup.properties"/>
-    
+
+    <!--
+        ant -DJustConfigure=true -f setup.xml 
+        Just generate configure.*, without downloading/extracting anything.
+    -->
+    <property name="JustConfigure" value="false" />
+
     <!-- Debugging...    
 	<echoproperties/>
 	-->
@@ -18,7 +24,7 @@
     <condition property="is.windows">
         <os family="windows" />
     </condition>
-    <target name="download.windows" if="is.windows" >
+    <target name="download.windows" if="is.windows" unless="JustConfigure" >
         <sequential>
             <echo>Getting Windows Tools...</echo>
 			<mkdir dir="${depends}"/>
@@ -77,6 +83,19 @@
     Export configurator.  Note ANT was already installed and in the
     path, or we wouldn't have got here.
 -->
+			
+            <!-- Launch android manager, to download more -->
+            <exec executable="${basedir}/${depends}/${windows.androidsdk.unpacked}/SDK Manager.exe" searchpath="true" spawn="true" />
+
+            <echo>Finish configuring Android SDK.</echo>
+            
+            <echo>Invoke ${configure.bat} to set up build environments.</echo>
+        </sequential>
+    </target>
+
+    <target name="configure.windows" if="is.windows" >
+        <sequential>
+            <echo>Exporting Windows Environment...</echo>
 <echo file="${configure.bat}" append="false">@echo off
 REM Set up build environment.
 set ANT_ROOT=${ant.home}
@@ -90,13 +109,25 @@ set Path=%COCOS_FRAMEWORKS%;%Path%
 set ANDROID_SDK_ROOT=${basedir}\${depends}\${windows.androidsdk.unpacked}
 set NDK_ROOT=${basedir}\${depends}\${windows.androidndk.unpacked}
 </echo>
-			
-            <!-- Launch android manager, to download more -->
-            <exec executable="${basedir}/${depends}/${windows.androidsdk.unpacked}/SDK Manager.exe" searchpath="true" spawn="true" />
+<echo file="${configure.properties}" append="false">#!/bin/sh
+# Ant configuration properties for Cocos2d-js
+ANT_ROOT=${ant.home}
+AIR_ROOT=${basedir}\${depends}\${cwindows.AIRSDK.unpacked}
+COCOS_CONSOLE_ROOT=${basedir}\${depends}\${windows.cocos2d.unpacked}\tools\cocos2d-console\bin
+COCOS_FRAMEWORKS=${basedir}\${depends}\${windows.cocos2d.unpacked}\frameworks
+ANDROID_SDK_ROOT=${basedir}\${depends}\${windows.androidsdk.unpacked}
+NDK_ROOT=${basedir}\${depends}\${windows.androidndk.unpacked}
 
-            <echo>Finish configuring Android SDK.</echo>
-            
-            <echo>Invoke ${configure.bat} to set up build environments.</echo>
+# Ant configuration properties for Adobe AIR
+SHELL=cmd
+SHELL.c=/c
+AIR_ROOT=${basedir}/${depends}/${windows.AIRSDK.unpacked}
+AIR.MXMLC=${AIR_ROOT}/bin/mxmlc.bat
+AIR.ADT=${AIR_ROOT}/bin/adt.bat
+AIR.ADL=${AIR_ROOT}/bin/adl.bat
+AIR.ASDOC=${AIR_ROOT}/bin/asdoc.bat
+GNU.TAIL=tail
+</echo>
         </sequential>
     </target>
     
@@ -106,7 +137,7 @@ set NDK_ROOT=${basedir}\${depends}\${windows.androidndk.unpacked}
             <os family="unix"/>
         </and>
     </condition>
-    <target name="download.osx" if="is.osx" >
+    <target name="download.osx" if="is.osx" unless="JustConfigure" >
         <sequential>
             <echo>Getting OS X Tools...</echo>
 			<mkdir dir="${depends}"/>
@@ -166,11 +197,22 @@ set NDK_ROOT=${basedir}\${depends}\${windows.androidndk.unpacked}
 				</sequential>
 
             </parallel>
-<!-- 
-    Export configurator.  Note ANT was already installed and in the
-    path, or we wouldn't have got here.
--->
 
+	           
+            <!-- Launch android manager, to download more -->
+            <echo>Finish configuring Android SDK.</echo>
+            <exec executable="${basedir}/${depends}/${osx.androidsdk.unpacked}/tools/android" spawn="true" />
+
+<echo>Invoke 'source configure.sh' to set up build environments, or add configure.sh
+to your ~/.bash_profile
+</echo>
+            
+        </sequential>
+    </target>
+
+    <target name="configure.osx" if="is.osx" >
+        <sequential>
+            <echo>Exporting OS X Environment...</echo>
 <echo file="${configure.sh}" append="false">#!/bin/sh
 # Set up build environment.
 export ANT_ROOT=${ant.home}
@@ -187,16 +229,24 @@ export NDK_ROOT=${basedir}/${depends}/${osx.androidndk.unpacked}
 <exec executable="sh" failonerror="true" searchPATH="true" >
     <arg line="-c 'chmod +x ${configure.sh}'" />
 </exec>
-	           
-            <!-- Launch android manager, to download more -->
-            <exec executable="${basedir}/${depends}/${osx.androidsdk.unpacked}/tools/android" spawn="true" />
+<echo file="${configure.properties}" append="false">#!/bin/sh
+# Ant configuration properties for Cocos2d-js
+ANT_ROOT=${ant.home}
+COCOS_CONSOLE_ROOT=${basedir}/${depends}/${osx.cocos2d.unpacked}/tools/cocos2d-console/bin
+COCOS_FRAMEWORKS=${basedir}/${depends}/${osx.cocos2d.unpacked}/frameworks
+ANDROID_SDK_ROOT=${basedir}/${depends}/${osx.androidsdk.unpacked}
+NDK_ROOT=${basedir}/${depends}/${osx.androidndk.unpacked}
 
-<echo>Finish configuring Android SDK.</echo>
-            
-<echo>Invoke 'source configure.sh' to set up build environments, or add configure.sh
-to your ~/.bash_profile
+# Ant configuration properties for Adobe AIR
+SHELL=sh
+SHELL.c=-c
+AIR_ROOT=${basedir}/${depends}/${osx.AIRSDK.unpacked}
+AIR.MXMLC=${AIR_ROOT}/bin/mxmlc
+AIR.ADT=${AIR_ROOT}/bin/adt
+AIR.ADL=${AIR_ROOT}/bin/adl
+AIR.ASDOC=${AIR_ROOT}/bin/asdoc
+GNU.TAIL=tail
 </echo>
-            
         </sequential>
     </target>
     
@@ -206,7 +256,7 @@ to your ~/.bash_profile
             <not><os family="mac"/></not>
         </and>
     </condition>
-    <target name="download.linux" if="is.linux" >
+    <target name="download.linux" if="is.linux" unless="JustConfigure" >
         <sequential>
             <echo>Getting Linux/Unix Tools...</echo>
 			<mkdir dir="${depends}"/>
@@ -259,13 +309,22 @@ to your ~/.bash_profile
 				<echo>${linux.androidndk.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
 
 			</sequential>
-			
             </parallel>
 
-<!-- 
-    Export configurator.  Note ANT was already installed and in the
-    path, or we wouldn't have got here.
--->
+
+            <!-- Launch android manager, to download more -->
+            <echo>Finish configuring Android SDK.</echo>
+            <exec executable="${basedir}/${depends}/${linux.androidsdk.unpacked}/tools/android" spawn="true" />
+
+<echo>Invoke 'source configure.sh' to set up build environments, or add configure.sh
+to your ~/.bash_profile
+</echo>
+        </sequential>
+    </target>
+
+    <target name="configure.linux" if="is.linux" >
+        <sequential>
+            <echo>Exporting Linux Environment...</echo>
 <echo file="${configure.sh}" append="false">#!/bin/sh
 # Set up build environment.
 export ANT_ROOT=${ant.home}
@@ -280,23 +339,24 @@ export NDK_ROOT=${basedir}/${depends}/${linux.androidndk.unpacked}
 <exec executable="sh" failonerror="true" searchPATH="true" >
     <arg line="-c 'chmod +x ${configure.sh}'" />
 </exec>
-
-            <!-- Launch android manager, to download more -->
-            <echo>Finish configuring Android SDK.</echo>
-            <exec executable="${basedir}/${depends}/${linux.androidsdk.unpacked}/tools/android" spawn="true" />
-
-
-<echo>Invoke 'source configure.sh' to set up build environments, or add configure.sh
-to your ~/.bash_profile
+<echo file="${configure.properties}" append="false">#!/bin/sh
+# Ant properties
+SHELL=sh
+SHELL.c=-c
+ANT_ROOT=${ant.home}
+COCOS_CONSOLE_ROOT=${basedir}/${depends}/${linux.cocos2d.unpacked}/tools/cocos2d-console/bin
+COCOS_FRAMEWORKS=${basedir}/${depends}/${linux.cocos2d.unpacked}/frameworks
+ANDROID_SDK_ROOT=${basedir}/${depends}/${linux.androidsdk.unpacked}
+NDK_ROOT=${basedir}/${depends}/${linux.androidndk.unpacked}
 </echo>
         </sequential>
     </target>
-
+    
     <!--
         Setup: 
             Depends: Check OS types and invoke the one that matches
     -->
-    <target name="setup" description="Download Based On OS" depends="download.windows,download.osx,download.linux" >
-    
+    <target name="setup" description="Download Based On OS" depends="download.windows,download.osx,download.linux,configure.windows,configure.osx,configure.linux" >
+   
     </target>    
 </project>

@@ -59,18 +59,26 @@ This will enable the debugger and document generator.
 -->
 <project basedir="." name="${targetname}" default="air" >
 
-<!-- 
-    This allow you to override certain, private settings with your own folder  
-    in ~/ant/build.properties.  Like passwords and device IDs.
--->
+    <!-- 
+        This allow you to override certain, private settings with your own folder  
+        in ~/ant/build.properties.  Like passwords and device IDs.
+    -->
 	<property file="${user.home}/ant/build.properties"/>
 
-<!-- Import settings from environment -->
+	<!-- Import settings from environment -->
 	<property environment="env" />
 
-<!-- Import build.properties, for project -->
+	<!-- Get paths from 'ant -f setup.xml' -->
+    <property file="../configure.properties"/>
+	
+	<!-- Import build.properties, for project -->
 	<property file="build.properties"/>
 
+	
+    <!-- Debugging...    
+	<echoproperties/>
+	-->
+	
 	<!--
 	    This build macro saves a lot of redundant typing
 	-->
