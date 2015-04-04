@@ -3,4 +3,5 @@ depends/
 
 configure.sh
 configure.bat
+configure.properties
 

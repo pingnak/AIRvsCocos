@@ -35,22 +35,14 @@
     <!-- Debugging...    
 	<echoproperties/>
 	-->
-    
-    <target name="initialize" description="Create Cocos2D-js Project" >
-        <!-- Have cocos make the project -->
-        
-        <!-- Make corrections to the project -->
-
-        <!-- Do initial transfer to project (the rest are incremental) -->
-
-    </target>
 
     <!-- Invoke cocos in various prescribed manners -->
 	<macrodef name="macro-cocos">
 		<attribute name="command"/>		<!-- Command line for cocos -->
+		<attribute name="dirname" default="${targetname}"/>
 		<sequential>
 			<tstamp />
-			<exec executable="${SHELL}" failonerror="true" searchpath="true" >
+			<exec executable="${SHELL}" dir="@{dirname}" failonerror="true" searchpath="true" >
 			    <env key="ANT_ROOT" value="${ANT_ROOT}" />
 			    <env key="COCOS_CONSOLE_ROOT" value="${COCOS_CONSOLE_ROOT}" />
 			    <env key="COCOS_FRAMEWORKS" value="${COCOS_FRAMEWORKS}" />
@@ -60,7 +52,7 @@
 
                 <arg line="${SHELL.c} 'cocos @{command}'" /> 
 
-			    <!-- Filter stderr, to point back at OUR source paths... -->
+			    <!-- Filter stderr, to point back at original source paths... -->
             </exec>
         </sequential>
 	</macrodef>
@@ -71,84 +63,227 @@
 		<attribute name="adware"/>		<!-- Enable adware -->
 		<!-- etc. -->
 
+	    <sequential>
 	    <!-- Transfer icons -->
-	    <sequential>
-	    </sequential>
 
-	    <!-- Transfer res -->
-	    <sequential>
-	    </sequential>
+	    <!-- Transfer res; optimize images, convert all sounds to mp3 -->
 
 	    <!-- Transfer+translate source code, given those attributes -->
-	    <sequential>
-	    </sequential>
 
 	    <!-- Generate resource references from resources in res -->
-	    <sequential>
-	    </sequential>
 
 	    <!-- Generate resource code references from code in src -->
-	    <sequential>
 	    </sequential>
-	    
+    
 	</macrodef>
+	
+	<!--
+	    Caution: This will be destructive to any existing changes that you were
+	    forced to make in XCode
+	
+	-->
+    <target name="init" description="Create Cocos2D-js Project" >
+        <echo>Initializing Project with Cocos</echo>
+
+        <!-- Have git ignore most of this stuff. -->
+<echo file=".gitignore" append="false">#Cocos2d-js boilerplate
+# Foresake all of Cocos2d's project tree from version control.
+# We can just rebuild it, so it's tens of thousands of files of boilerplatr and  
+# intermediate files with a few minor tweaks scattered among them.
+${targetname}
+</echo>
+
+
+        <!-- Have cocos make the project -->
+		<macro-cocos dirname="." command="new ${targetname} --package ${targetname} --language js" />
+
+        <!-- Do initial transfer to project (the rest are incremental) -->
+
+        <!-- 
+            Big, bad iOS BUG in cocos2d-js-v3.3:
+            
+            It names iOS project with ' iOS' on the end.  
+            
+            Apple iTunes connect will initially accept this without complaing, 
+            then they will wait a week, and then reject it!
+            
+            Reason: 
+            
+            "We found that your app does not comply with the Guidelines for
+             Using Apple's Trademarks and Copyrights, as required by the App 
+             Store Review Guidelines. Specifically, your app includes the use 
+             of "iOS" in the app bundle name."
+            
+            No, you can't just rename it.  It's all signed wrong, internally.
+            
+            There, I just saved you a week off your app submission.
+            
+            Just for contrast, 'Google Play' takes about five minutes.
+        -->
+        <replaceregexp match="${targetname} iOS" replace="${targetname}" flags="g" byline="true">
+            <fileset file="${targetname}/frameworks/runtime-src/proj.ios_mac/Example.xcodeproj/project.pbxproj" />
+        </replaceregexp>
+
+        <!--
+            Fix 'our' version of Android SDK manifest
+        -->        
+        <replaceregexp match="{{PACKAGE_ID}}" replace="${app.id}" flags="g" byline="true">
+            <fileset file="myframeworks/android/AndroidManifest.xml" />
+        </replaceregexp>
+        <replaceregexp match="{{ORIENTATION}}" replace="${app.orientation}" flags="g" byline="true">
+            <fileset file="myframeworks/android/AndroidManifest.xml" />
+        </replaceregexp>
+        
+<property name="android.certificate.absolute" location="${android.certificate}" />
+<echo file="${targetname}/frameworks/runtime-src/proj.android/ant.properties" append="true" >
+# Tack on keystore data, as cocos would have made you type it in.
+# Note: This is stored in the clear, where it could find its way into version 
+# control, where it definitely should not be.
+# You can put an Android app through the app store with your self-signed
+# certificate, but you shouldn't put it places where others might find it.
+key.store=${android.certificate.absolute}
+key.store.password=${android.certificate.password}
+key.alias=android.keystore
+key.alias.password=${android.certificate.alias.password}
+</echo>
+        
+    </target>
+
+    <target name="web.configure" >
+        <echo>Updating web resources...</echo>
+		
+    </target>
     
-    <target name="web" description="Make Web" depends="transfer" >
+    <target name="web" description="Make Web" depends="web.configure" >
+		<macro-cocos command="compile -p web -m release --advanced" />
     </target>
 
-    <target name="runweb" description="Run Web" depends="transfer" >
+    <target name="runweb" description="Run Web" depends="web.configure" >
+		<macro-cocos command="run -p web -m release --advanced" />
     </target>
 
-    <target name="debugweb" description="Debug Web" depends="transfer" >
+    <target name="debugweb" description="Debug Web" depends="web.configure" >
+		<macro-cocos command="run -p web -m debug" />
+    </target>
+
+    <!-- Make an android certificate, if it doesn't exist -->
+	<target name="checkandroidcert" >
+		<available property="androidcert.available" file="${android.certificate}" />
+	</target>
+	<target name="androidcert" description="Build Self-Signed Certificate for Android" unless="androidcert.available" depends="checkandroidcert">
+		<exec executable="keytool" searchpath="true" vmlauncher="false" failonerror="true" >
+		    <arg line="-genkey -keyalg RSA -validity 9999"/>
+		    <arg line="-dname '${android.certificate.dname}'"/>
+		    <arg line="-keystore ${android.certificate}"/>
+		    <arg line="-storepass ${android.certificate.password}"/>
+		    <arg line="-alias ${android.certificate.alias}"/>
+		    <arg line="-keypass ${android.certificate.alias.password}"/>
+		</exec>
+	</target>
+
+    <target name="android" description="Make Android" depends="androidcert" >
+		<macro-cocos command="compile -p android -m release --ndk-mode release" /> 
+    </target>
+
+    <target name="android.configure" depends="androidcert" >
+        <echo>Updating android resources...</echo>
+		
     </target>
     
-    <target name="ios" description="Make iOS" depends="transfer" >
+    <target name="runandroid" description="Run Android" depends="android.configure" >
+		<macro-cocos command="run -p android -m release --ndk-mode release" />
     </target>
 
-    <target name="runios" description="Run iOS" depends="transfer" >
-    </target>
-
-    <target name="debugios" description="Debug iOS" depends="transfer" >
+    <target name="debugandroid" description="Debug Android" depends="android.configure" >
+		<macro-cocos command="compile -p android -m debug --ndk-mode debug" /> 
     </target>
     
-    <target name="android" description="Make Android" depends="transfer" >
-    </target>
 
-    <target name="runandroid" description="Run Android" depends="transfer" >
-    </target>
+    <!-- Note: You need a Mac, with XCode (from app store) for iOS/OS X. -->
+    <condition property="is.osx">
+        <and>
+            <os family="mac"/>
+            <os family="unix"/>
+        </and>
+    </condition>
 
-    <target name="debugandroid" description="Debug Android" depends="transfer" >
+    <target name="ios.configure" if="is.osx" >
+        <echo>Updating iOS resources...</echo>
+		
     </target>
     
-    <target name="osx" description="Make OS X" depends="transfer" >
+    <target name="ios" description="Make iOS" depends="ios.configure" if="is.osx" >
+		<macro-cocos command="compile ios -m release -t ${targetname} --sign-identity '${ios.sign}'" />
     </target>
 
-    <target name="runosx" description="Run OS X" depends="transfer" >
+    <target name="runios"  description="Run iOS" depends="ios.configure" if="is.osx" >
+		<macro-cocos command="run ios -m release -t ${targetname} --sign-identity '${ios.sign}'" />
     </target>
 
-    <target name="debugosx" description="Debug OS X" depends="transfer" >
+    <target name="debugios" description="Debug iOS" depends="ios.configure" if="is.osx" >
+		<macro-cocos command="compile ios -m debug -t ${targetname} --sign-identity '${ios.sign}'" />
     </target>
     
-    <target name="windows" description="Make Windows" depends="transfer" >
+    <!-- Note: You need a Mac, with XCode (from app store). -->
+
+    <target name="osx.configure" if="is.osx" >
+        <echo>Updating OS X resources...</echo>
+		
     </target>
 
-    <target name="runwindows" description="Run Android" depends="transfer" >
+    <target name="osx" description="Make OS X" depends="osx.configure" if="is.osx" >
+    </target>
+
+    <target name="runosx" description="Run OS X" depends="osx.configure" if="is.osx" >
+    </target>
+
+    <target name="debugosx" description="Debug OS X" depends="osx.configure" if="is.osx" >
     </target>
     
-    <target name="debugwindows" description="Debug Windows" depends="transfer" >
+    <!-- Note: You need Windows and Visual Studio to build a Windows target -->
+    <condition property="is.windows">
+        <os family="windows" />
+    </condition>
+
+    <target name="windows.configure" if="is.windows" >
+        <echo>Updating Windows resources...</echo>
+		
     </target>
 
-    <target name="linux" description="Make Linux" depends="transfer" >
+    <target name="windows" description="Make Windows" depends="windows.configure" if="is.windows" >
     </target>
 
-    <target name="runlinux" description="Run Linux" depends="transfer" >
+    <target name="runwindows" description="Run Android" depends="windows.configure" if="is.windows" >
+    </target>
+    
+    <target name="debugwindows" description="Debug Windows" depends="windows.configure" if="is.windows" >
+    </target>
+
+    <!-- Note: You need Linux to do Linux -->
+    <condition property="is.linux">
+        <and>
+            <os family="unix"/>
+            <not><os family="mac"/></not>
+        </and>
+    </condition>
+
+    <target name="linux.configure" if="is.linux" >
+        <echo>Updating Linux resources...</echo>
+		
+    </target>
+
+    <target name="linux" description="Make Linux" depends="linux.configure" if="is.linux" >
+    </target>
+
+    <target name="runlinux" description="Run Linux" depends="linux.configure" if="is.linux" >
     </target>
 	
-    <target name="debuglinux" description="Debug Linux" depends="transfer" >
+    <target name="debuglinux" description="Debug Linux" depends="linux.configure" if="is.linux" >
     </target>
 
     <!-- Hint: Remove unwanted projects from 'depends=' -->
     <target name="all" description="Make all release targets" depends="web,android,ios,osx,windows,linux" >
+        
     </target>
     
 </project>

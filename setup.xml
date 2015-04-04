@@ -13,13 +13,16 @@
 
     <!--
         ant -DJustConfigure=true -f setup.xml 
+
         Just generate configure.*, without downloading/extracting anything.
+        
+        It'll also launch android and avd manager
     -->
     <property name="JustConfigure" value="false" />
 
-    <!-- Debugging...    
+    <!-- Debugging...
 	<echoproperties/>
-	-->
+   	-->
     
     <condition property="is.windows">
         <os family="windows" />
@@ -78,16 +81,6 @@
                     <echo>${windows.androidsdk.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
 				</sequential>
             </parallel>
-			
-<!-- 
-    Export configurator.  Note ANT was already installed and in the
-    path, or we wouldn't have got here.
--->
-			
-            <!-- Launch android manager, to download more -->
-            <exec executable="${basedir}/${depends}/${windows.androidsdk.unpacked}/SDK Manager.exe" searchpath="true" spawn="true" />
-
-            <echo>Finish configuring Android SDK.</echo>
             
             <echo>Invoke ${configure.bat} to set up build environments.</echo>
         </sequential>
@@ -107,16 +100,23 @@ set Path=%COCOS_CONSOLE_ROOT%;%Path%
 set COCOS_FRAMEWORKS=${basedir}\${depends}\${windows.cocos2d.unpacked}\frameworks
 set Path=%COCOS_FRAMEWORKS%;%Path%
 set ANDROID_SDK_ROOT=${basedir}\${depends}\${windows.androidsdk.unpacked}
+set Path=%ANDROID_SDK_ROOT%/tools;%ANDROID_SDK_ROOT%/platform-tools;%Path%
 set NDK_ROOT=${basedir}\${depends}\${windows.androidndk.unpacked}
 </echo>
 <echo file="${configure.properties}" append="false">#!/bin/sh
 # Ant configuration properties for Cocos2d-js
 ANT_ROOT=${ant.home}
-AIR_ROOT=${basedir}\${depends}\${cwindows.AIRSDK.unpacked}
-COCOS_CONSOLE_ROOT=${basedir}\${depends}\${windows.cocos2d.unpacked}\tools\cocos2d-console\bin
-COCOS_FRAMEWORKS=${basedir}\${depends}\${windows.cocos2d.unpacked}\frameworks
-ANDROID_SDK_ROOT=${basedir}\${depends}\${windows.androidsdk.unpacked}
-NDK_ROOT=${basedir}\${depends}\${windows.androidndk.unpacked}
+AIR_ROOT=${basedir}/${depends}/${cwindows.AIRSDK.unpacked}
+COCOS_CONSOLE_ROOT=${basedir}/${depends}/${windows.cocos2d.unpacked}/tools/cocos2d-console/bin
+COCOS_FRAMEWORKS=${basedir}/${depends}/${windows.cocos2d.unpacked}/frameworks
+
+NDK_ROOT=${basedir}/${depends}/${windows.androidndk.unpacked}
+ANDROID_SDK_ROOT=${basedir}/${depends}/${windows.androidsdk.unpacked}
+android.android=${ANDROID_SDK_ROOT}/SDK Manager.exe
+android.avd=${ANDROID_SDK_ROOT}/AVD Manager.exe
+android.emulator=${ANDROID_SDK_ROOT}/tools/emulator
+android.adb=${ANDROID_SDK_ROOT}/platform-tools/adb
+android.monitor=${ANDROID_SDK_ROOT}/platform-tools/monitor
 
 # Ant configuration properties for Adobe AIR
 SHELL=cmd
@@ -127,7 +127,13 @@ AIR.ADT=${AIR_ROOT}/bin/adt.bat
 AIR.ADL=${AIR_ROOT}/bin/adl.bat
 AIR.ASDOC=${AIR_ROOT}/bin/asdoc.bat
 GNU.TAIL=tail
+
 </echo>
+			
+            <!-- Launch android manager, to download more -->
+            <echo>Finish configuring Android SDK.</echo>
+            <exec executable="${basedir}/${depends}/${windows.androidsdk.unpacked}/SDK Manager.exe" searchpath="true" spawn="true" />
+            <exec executable="${basedir}/${depends}/${windows.androidsdk.unpacked}/AVD Manager.exe" searchpath="true" spawn="true" />
         </sequential>
     </target>
     
@@ -198,11 +204,6 @@ GNU.TAIL=tail
 
             </parallel>
 
-	           
-            <!-- Launch android manager, to download more -->
-            <echo>Finish configuring Android SDK.</echo>
-            <exec executable="${basedir}/${depends}/${osx.androidsdk.unpacked}/tools/android" spawn="true" />
-
 <echo>Invoke 'source configure.sh' to set up build environments, or add configure.sh
 to your ~/.bash_profile
 </echo>
@@ -213,9 +214,14 @@ to your ~/.bash_profile
     <target name="configure.osx" if="is.osx" >
         <sequential>
             <echo>Exporting OS X Environment...</echo>
+            <!-- Ask nicely for which ant -->
+            <exec executable="sh" outputproperty='ANT_FILE' failonerror="true"  >
+                <arg line="-c 'which ant'" />
+            </exec>
+            <dirname file="${ANT_FILE}" property="ANT_ROOT" />
 <echo file="${configure.sh}" append="false">#!/bin/sh
 # Set up build environment.
-export ANT_ROOT=${ant.home}
+export ANT_ROOT=${ANT_ROOT}
 #export PATH=$ANT_ROOT/bin:$PATH
 export AIR_ROOT=${basedir}/${depends}/${osx.AIRSDK.unpacked}
 export PATH=$AIR_ROOT/bin:$PATH
@@ -224,6 +230,7 @@ export PATH=$COCOS_CONSOLE_ROOT:$PATH
 export COCOS_FRAMEWORKS=${basedir}/${depends}/${osx.cocos2d.unpacked}/frameworks
 export PATH=$COCOS_FRAMEWORKS:$PATH
 export ANDROID_SDK_ROOT=${basedir}/${depends}/${osx.androidsdk.unpacked}
+export PATH=$ANDROID_SDK_ROOT/tools:$ANDROID_SDK_ROOT/platform-tools:$PATH
 export NDK_ROOT=${basedir}/${depends}/${osx.androidndk.unpacked}
 </echo>
 <exec executable="sh" failonerror="true" searchPATH="true" >
@@ -231,11 +238,16 @@ export NDK_ROOT=${basedir}/${depends}/${osx.androidndk.unpacked}
 </exec>
 <echo file="${configure.properties}" append="false">#!/bin/sh
 # Ant configuration properties for Cocos2d-js
-ANT_ROOT=${ant.home}
+ANT_ROOT=${ANT_ROOT}
 COCOS_CONSOLE_ROOT=${basedir}/${depends}/${osx.cocos2d.unpacked}/tools/cocos2d-console/bin
 COCOS_FRAMEWORKS=${basedir}/${depends}/${osx.cocos2d.unpacked}/frameworks
-ANDROID_SDK_ROOT=${basedir}/${depends}/${osx.androidsdk.unpacked}
+
 NDK_ROOT=${basedir}/${depends}/${osx.androidndk.unpacked}
+ANDROID_SDK_ROOT=${basedir}/${depends}/${osx.androidsdk.unpacked}
+android.android=${ANDROID_SDK_ROOT}/tools/android
+android.emulator=${ANDROID_SDK_ROOT}/tools/emulator
+android.adb=${ANDROID_SDK_ROOT}/platform-tools/adb
+android.monitor=${ANDROID_SDK_ROOT}/platform-tools/monitor
 
 # Ant configuration properties for Adobe AIR
 SHELL=sh
@@ -247,6 +259,14 @@ AIR.ADL=${AIR_ROOT}/bin/adl
 AIR.ASDOC=${AIR_ROOT}/bin/asdoc
 GNU.TAIL=tail
 </echo>
+	           
+            <!-- Launch android manager, to download more -->
+            <echo>Finish configuring Android SDK.</echo>
+            <exec executable="${basedir}/${depends}/${osx.androidsdk.unpacked}/tools/android" spawn="true" />
+            <exec executable="${basedir}/${depends}/${osx.androidsdk.unpacked}/tools/android" spawn="true">
+                <arg line="avd" />
+            </exec>
+
         </sequential>
     </target>
     
@@ -312,10 +332,6 @@ GNU.TAIL=tail
             </parallel>
 
 
-            <!-- Launch android manager, to download more -->
-            <echo>Finish configuring Android SDK.</echo>
-            <exec executable="${basedir}/${depends}/${linux.androidsdk.unpacked}/tools/android" spawn="true" />
-
 <echo>Invoke 'source configure.sh' to set up build environments, or add configure.sh
 to your ~/.bash_profile
 </echo>
@@ -323,18 +339,25 @@ to your ~/.bash_profile
     </target>
 
     <target name="configure.linux" if="is.linux" >
+        
         <sequential>
             <echo>Exporting Linux Environment...</echo>
+            <!-- Ask nicely for which ant -->
+            <exec executable="sh" outputproperty='ANT_FILE' failonerror="true"  >
+                <arg line="-c 'which ant'" />
+            </exec>
+            <dirname file="${ANT_FILE}" property="ANT_ROOT" />
 <echo file="${configure.sh}" append="false">#!/bin/sh
 # Set up build environment.
-export ANT_ROOT=${ant.home}
+export ANT_ROOT=${ANT_ROOT}
 #export PATH=$ANT_ROOT/bin:$PATH
 export COCOS_CONSOLE_ROOT=${basedir}/${depends}/${linux.cocos2d.unpacked}/tools/cocos2d-console/bin
 export PATH=$COCOS_CONSOLE_ROOT:$PATH
 export COCOS_FRAMEWORKS=${basedir}/${depends}/${linux.cocos2d.unpacked}/frameworks
 export PATH=$COCOS_FRAMEWORKS:$PATH
-export ANDROID_SDK_ROOT=${basedir}/${depends}/${linux.androidsdk.unpacked}
 export NDK_ROOT=${basedir}/${depends}/${linux.androidndk.unpacked}
+export ANDROID_SDK_ROOT=${basedir}/${depends}/${linux.androidsdk.unpacked}
+
 </echo>
 <exec executable="sh" failonerror="true" searchPATH="true" >
     <arg line="-c 'chmod +x ${configure.sh}'" />
@@ -343,11 +366,24 @@ export NDK_ROOT=${basedir}/${depends}/${linux.androidndk.unpacked}
 # Ant properties
 SHELL=sh
 SHELL.c=-c
-ANT_ROOT=${ant.home}
+ANT_ROOT=${ANT_ROOT}
 COCOS_CONSOLE_ROOT=${basedir}/${depends}/${linux.cocos2d.unpacked}/tools/cocos2d-console/bin
 COCOS_FRAMEWORKS=${basedir}/${depends}/${linux.cocos2d.unpacked}/frameworks
-ANDROID_SDK_ROOT=${basedir}/${depends}/${linux.androidsdk.unpacked}
+
 NDK_ROOT=${basedir}/${depends}/${linux.androidndk.unpacked}
+ANDROID_SDK_ROOT=${basedir}/${depends}/${linux.androidsdk.unpacked}
+android.android=${ANDROID_SDK_ROOT}/tools/android
+android.emulator=${ANDROID_SDK_ROOT}/tools/emulator
+android.adb=${ANDROID_SDK_ROOT}/platform-tools/adb
+android.monitor=${ANDROID_SDK_ROOT}/platform-tools/monitor
+
+<!-- Launch android manager, to download more -->
+<echo>Finish configuring Android SDK.</echo>
+<exec executable="${basedir}/${depends}/${linux.androidsdk.unpacked}/tools/android" spawn="true" />
+<exec executable="${basedir}/${depends}/${osx.androidsdk.unpacked}/tools/android" spawn="true">
+    <arg line="avd" />
+</exec>
+
 </echo>
         </sequential>
     </target>
