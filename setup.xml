@@ -2,6 +2,12 @@
 <!--
     Install ANT from http://ant.apache.org/bindownload.cgi
     Basically, unzip it somewhere, and add it to the PATH environment variable
+
+    Once this has run once, you can re-generate the config and re-execute ant
+    configuration executables with this...
+
+    ant -DJustConfigure=true -f setup.xml 
+    
 -->
 <project basedir="." name="Download and Setup" default="setup" >
 
@@ -11,14 +17,6 @@
 	<!-- Import settings -->
     <property file="setup.properties"/>
 
-    <!--
-        ant -DJustConfigure=true -f setup.xml 
-
-        Just generate configure.*, without downloading/extracting anything.
-        
-        It'll also launch android and avd manager
-    -->
-    <property name="JustConfigure" value="false" />
 
     <!-- Debugging...
 	<echoproperties/>
@@ -28,62 +26,66 @@
         <os family="windows" />
     </condition>
     <target name="download.windows" if="is.windows" unless="JustConfigure" >
-        <sequential>
-            <echo>Getting Windows Tools...</echo>
-			<mkdir dir="${depends}"/>
-            <!-- 
-                Download+extract a couple of things at a time, trying to overlap
-                downloads and extractions. 
+        <echo>Getting Windows Tools...</echo>
+        <mkdir dir="${depends}"/>
+        <!-- 
+            Download+extract a couple of things at a time, trying to overlap
+            downloads and extractions. 
 
-                Note: In Windowsland, all files are 'executable', so ant/JAVA 
-                has no problem with permissions.
-            -->
-            <parallel threadCount="2">
-				<sequential>
-					<get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
-						<url url="${windows.python.url}"/>
-					</get>
-					<!-- Launch interactive Python installer -->
-					<exec executable="msiexec" dir="${depends}" spawn="true" searchpath="true" >
-						<arg line="/I ${windows.python.filename}" />
-					</exec>
-                    <echo>${windows.python.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
-				</sequential>
-				<sequential>
-					<get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
-						<url url="${windows.AIRSDK.url}"/>
-					</get>
-					<unzip src="${depends}/${windows.AIRSDK.filename}" dest="${depends}/${windows.AIRSDK.unpacked}" />
-                    <echo>${windows.AIRSDK.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
-				</sequential>
-				<sequential>
-					<get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
-						<url url="${windows.cocos2d.url}"/>
-					</get>
-					<unzip src="${depends}/${windows.cocos2d.filename}" dest="${depends}" />
-                    <echo>${windows.cocos2d.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
-				</sequential>
-				<sequential>
-					<get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
-						<url url="${windows.androidndk.url}"/>
-					</get>
-					<!-- Evil, self-extracting executable for ndk -->
-					<exec executable="cmd" dir="${depends}" failonerror="true" searchpath="true" >
-						<arg line="/c ${windows.androidndk.filename} -y" />
-					</exec>
-                    <echo>${windows.androidndk.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
-				</sequential>
-				<sequential>
-					<get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
-						<url url="${windows.androidsdk.url}"/>
-					</get>
-					<unzip src="${depends}/${windows.androidsdk.filename}" dest="${depends}" />
-                    <echo>${windows.androidsdk.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
-				</sequential>
-            </parallel>
-            
-            <echo>Invoke ${configure.bat} to set up build environments.</echo>
-        </sequential>
+            Note: In Windowsland, all files are 'executable', so ant/JAVA 
+            has no problem with permissions.
+        -->
+        <parallel threadCount="2">
+            <sequential>
+                <get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
+                    <url url="${ant.contrib.url}"/>
+                </get>
+                <unzip src="${depends}/${ant.contrib.filename}" dest="${depends}" />
+            </sequential>
+            <sequential>
+                <get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
+                    <url url="${windows.python.url}"/>
+                </get>
+                <!-- Launch interactive Python installer -->
+                <exec executable="msiexec" dir="${depends}" spawn="true" searchpath="true" >
+                    <arg line="/I ${windows.python.filename}" />
+                </exec>
+                <echo>${windows.python.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
+            </sequential>
+            <sequential>
+                <get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
+                    <url url="${windows.AIRSDK.url}"/>
+                </get>
+                <unzip src="${depends}/${windows.AIRSDK.filename}" dest="${depends}/${windows.AIRSDK.unpacked}" />
+                <echo>${windows.AIRSDK.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
+            </sequential>
+            <sequential>
+                <get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
+                    <url url="${cocos2d.url}"/>
+                </get>
+                <unzip src="${depends}/${cocos2d.filename}" dest="${depends}" />
+                <echo>${cocos2d.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
+            </sequential>
+            <sequential>
+                <get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
+                    <url url="${windows.androidndk.url}"/>
+                </get>
+                <!-- Evil, self-extracting executable for ndk -->
+                <exec executable="cmd" dir="${depends}" failonerror="true" searchpath="true" >
+                    <arg line="/c ${windows.androidndk.filename} -y" />
+                </exec>
+                <echo>${windows.androidndk.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
+            </sequential>
+            <sequential>
+                <get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
+                    <url url="${windows.androidsdk.url}"/>
+                </get>
+                <unzip src="${depends}/${windows.androidsdk.filename}" dest="${depends}" />
+                <echo>${windows.androidsdk.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
+            </sequential>
+        </parallel>
+        
+        <echo>Invoke ${configure.bat} to set up build environments.</echo>
     </target>
 
     <target name="configure.windows" if="is.windows" >
@@ -95,9 +97,9 @@ set ANT_ROOT=${ant.home}
 REM set Path=%ANT_ROOT%\bin;%Path%
 set AIR_ROOT=${basedir}\${depends}\${cwindows.AIRSDK.unpacked}
 set Path=%AIR_ROOT%\bin;%Path%
-set COCOS_CONSOLE_ROOT=${basedir}\${depends}\${windows.cocos2d.unpacked}\tools\cocos2d-console\bin
+set COCOS_CONSOLE_ROOT=${basedir}\${depends}\${cocos2d.unpacked}\tools\cocos2d-console\bin
 set Path=%COCOS_CONSOLE_ROOT%;%Path%
-set COCOS_FRAMEWORKS=${basedir}\${depends}\${windows.cocos2d.unpacked}\frameworks
+set COCOS_FRAMEWORKS=${basedir}\${depends}\${cocos2d.unpacked}\frameworks
 set Path=%COCOS_FRAMEWORKS%;%Path%
 set ANDROID_SDK_ROOT=${basedir}\${depends}\${windows.androidsdk.unpacked}
 set Path=%ANDROID_SDK_ROOT%/tools;%ANDROID_SDK_ROOT%/platform-tools;%Path%
@@ -107,8 +109,10 @@ set NDK_ROOT=${basedir}\${depends}\${windows.androidndk.unpacked}
 # Ant configuration properties for Cocos2d-js
 ANT_ROOT=${ant.home}
 AIR_ROOT=${basedir}/${depends}/${cwindows.AIRSDK.unpacked}
-COCOS_CONSOLE_ROOT=${basedir}/${depends}/${windows.cocos2d.unpacked}/tools/cocos2d-console/bin
-COCOS_FRAMEWORKS=${basedir}/${depends}/${windows.cocos2d.unpacked}/frameworks
+ANT_CONTRIB=${basedir}/${depends}/${ant.contrib.unpacked}
+
+COCOS_CONSOLE_ROOT=${basedir}/${depends}/${cocos2d.unpacked}/tools/cocos2d-console/bin
+COCOS_FRAMEWORKS=${basedir}/${depends}/${cocos2d.unpacked}/frameworks
 
 NDK_ROOT=${basedir}/${depends}/${windows.androidndk.unpacked}
 ANDROID_SDK_ROOT=${basedir}/${depends}/${windows.androidsdk.unpacked}
@@ -144,71 +148,76 @@ GNU.TAIL=tail
         </and>
     </condition>
     <target name="download.osx" if="is.osx" unless="JustConfigure" >
-        <sequential>
-            <echo>Getting OS X Tools...</echo>
-			<mkdir dir="${depends}"/>
+        <echo>Getting OS X Tools...</echo>
+        <mkdir dir="${depends}"/>
 
-            <!-- 
-                Download+extract a couple of things at a time, trying to overlap
-                downloads and extractions. 
+        <!-- 
+            Download+extract a couple of things at a time, trying to overlap
+            downloads and extractions. 
 
-                Note: GNU unzip/tar are shell versions, because JAVA won't set 
-                permissions.  We can expect these tools in a UNIX shell.
-            -->
+            Note: GNU unzip/tar are shell versions, because JAVA won't set 
+            permissions.  We can expect these tools in a UNIX shell.
+        -->
 
-            <parallel threadCount="2">
+        <parallel threadCount="2">
 
-				<sequential>
-                    <get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
-                        <url url="${osx.AIRSDK.url}"/>
-                    </get>
-                    <mkdir dir="${depends}/${osx.AIRSDK.unpacked}"/>
-                    <exec executable="tar" failonerror="true" >
-                        <arg line="jxf '${depends}/${osx.AIRSDK.filename}' -C '${depends}/${osx.AIRSDK.unpacked}'" />
-                    </exec>
-                    <echo>${osx.AIRSDK.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
-				</sequential>
-				
-				<sequential>
-					<get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
-						<url url="${osx.cocos2d.url}"/>
-					</get>
-                    <exec executable="unzip" failonerror="true"  >
-                        <arg line="-o -d '${depends}' '${depends}/${osx.cocos2d.filename}'" />
-                    </exec>
-                    <echo>${osx.cocos2d.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
-				</sequential>
+            <sequential>
+                <get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
+                    <url url="${ant.contrib.url}"/>
+                </get>
+                <unzip src="${depends}/${ant.contrib.filename}" dest="${depends}" />
+            </sequential>
+        
+            <sequential>
+                <get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
+                    <url url="${osx.AIRSDK.url}"/>
+                </get>
+                <mkdir dir="${depends}/${osx.AIRSDK.unpacked}"/>
+                <exec executable="tar" failonerror="true" >
+                    <arg line="jxf '${depends}/${osx.AIRSDK.filename}' -C '${depends}/${osx.AIRSDK.unpacked}'" />
+                </exec>
+                <echo>${osx.AIRSDK.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
+            </sequential>
+            
+            <sequential>
+                <get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
+                    <url url="${cocos2d.url}"/>
+                </get>
+                <exec executable="unzip" failonerror="true"  >
+                    <arg line="-o -d '${depends}' '${depends}/${cocos2d.filename}'" />
+                </exec>
+                <echo>${cocos2d.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
+            </sequential>
 
-				<sequential>
-					<get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
-						<url url="${osx.androidndk.url}"/>
-					</get>
-					<exec executable="sh" dir="${depends}" failonerror="true" searchpath="true" >
-						<arg line="-c 'chmod +x ${osx.androidndk.filename}'" />
-					</exec>
-					<exec executable="sh" dir="${depends}" failonerror="true" searchpath="true" >
-						<arg line="-c './${osx.androidndk.filename} -y'" />
-					</exec>
-                    <echo>${osx.androidndk.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
-				</sequential>
-				
-				<sequential>
-					<get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
-						<url url="${osx.androidsdk.url}"/>
-					</get>
-                    <exec executable="unzip" failonerror="true" >
-                        <arg line="-o -d '${depends}' '${depends}/${osx.androidsdk.filename}'" />
-                    </exec>
-                    <echo>${osx.androidsdk.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
-				</sequential>
+            <sequential>
+                <get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
+                    <url url="${osx.androidndk.url}"/>
+                </get>
+                <exec executable="sh" dir="${depends}" failonerror="true" searchpath="true" >
+                    <arg line="-c 'chmod +x ${osx.androidndk.filename}'" />
+                </exec>
+                <exec executable="sh" dir="${depends}" failonerror="true" searchpath="true" >
+                    <arg line="-c './${osx.androidndk.filename} -y'" />
+                </exec>
+                <echo>${osx.androidndk.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
+            </sequential>
+            
+            <sequential>
+                <get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
+                    <url url="${osx.androidsdk.url}"/>
+                </get>
+                <exec executable="unzip" failonerror="true" >
+                    <arg line="-o -d '${depends}' '${depends}/${osx.androidsdk.filename}'" />
+                </exec>
+                <echo>${osx.androidsdk.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
+            </sequential>
 
-            </parallel>
+        </parallel>
 
 <echo>Invoke 'source configure.sh' to set up build environments, or add configure.sh
 to your ~/.bash_profile
 </echo>
             
-        </sequential>
     </target>
 
     <target name="configure.osx" if="is.osx" >
@@ -225,9 +234,9 @@ export ANT_ROOT=${ANT_ROOT}
 #export PATH=$ANT_ROOT/bin:$PATH
 export AIR_ROOT=${basedir}/${depends}/${osx.AIRSDK.unpacked}
 export PATH=$AIR_ROOT/bin:$PATH
-export COCOS_CONSOLE_ROOT=${basedir}/${depends}/${osx.cocos2d.unpacked}/tools/cocos2d-console/bin
+export COCOS_CONSOLE_ROOT=${basedir}/${depends}/${cocos2d.unpacked}/tools/cocos2d-console/bin
 export PATH=$COCOS_CONSOLE_ROOT:$PATH
-export COCOS_FRAMEWORKS=${basedir}/${depends}/${osx.cocos2d.unpacked}/frameworks
+export COCOS_FRAMEWORKS=${basedir}/${depends}/${cocos2d.unpacked}/frameworks
 export PATH=$COCOS_FRAMEWORKS:$PATH
 export ANDROID_SDK_ROOT=${basedir}/${depends}/${osx.androidsdk.unpacked}
 export PATH=$ANDROID_SDK_ROOT/tools:$ANDROID_SDK_ROOT/platform-tools:$PATH
@@ -239,8 +248,10 @@ export NDK_ROOT=${basedir}/${depends}/${osx.androidndk.unpacked}
 <echo file="${configure.properties}" append="false">#!/bin/sh
 # Ant configuration properties for Cocos2d-js
 ANT_ROOT=${ANT_ROOT}
-COCOS_CONSOLE_ROOT=${basedir}/${depends}/${osx.cocos2d.unpacked}/tools/cocos2d-console/bin
-COCOS_FRAMEWORKS=${basedir}/${depends}/${osx.cocos2d.unpacked}/frameworks
+ANT_CONTRIB=${basedir}/${depends}/${ant.contrib.unpacked}
+
+COCOS_CONSOLE_ROOT=${basedir}/${depends}/${cocos2d.unpacked}/tools/cocos2d-console/bin
+COCOS_FRAMEWORKS=${basedir}/${depends}/${cocos2d.unpacked}/frameworks
 
 NDK_ROOT=${basedir}/${depends}/${osx.androidndk.unpacked}
 ANDROID_SDK_ROOT=${basedir}/${depends}/${osx.androidsdk.unpacked}
@@ -277,65 +288,69 @@ GNU.TAIL=tail
         </and>
     </condition>
     <target name="download.linux" if="is.linux" unless="JustConfigure" >
+        <echo>Getting Linux/Unix Tools...</echo>
+        <mkdir dir="${depends}"/>
+
+        <!-- 
+            Download+extract a couple of things at a time, trying to overlap
+            downloads and extractions. 
+
+            Note: GNU unzip/tar are shell versions, because JAVA won't set 
+            permissions.  We can expect these tools in a UNIX shell.
+        -->
+       
+        <parallel threadCount="2">
         <sequential>
-            <echo>Getting Linux/Unix Tools...</echo>
-			<mkdir dir="${depends}"/>
+            <get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
+                <url url="${ant.contrib.url}"/>
+            </get>
+            <unzip src="${depends}/${ant.contrib.filename}" dest="${depends}" />
+        </sequential>
+        <sequential>
+            
+            <get dest="${depends}" skipexisting="true" ignoreerrors="false" >
+                <url url="${linux.androidsdk.url}"/>
+            </get>
+            <exec executable="tar" failonerror="true" >
+                <arg line="zxf '${depends}/${linux.androidsdk.filename}' -C '${depends}'" />
+            </exec>
+            <echo>${linux.androidsdk.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
 
-            <!-- 
-                Download+extract a couple of things at a time, trying to overlap
-                downloads and extractions. 
+        </sequential>
+        <sequential>
+        
+            <get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
+                <url url="${cocos2d.url}"/>
+            </get>
 
-                Note: GNU unzip/tar are shell versions, because JAVA won't set 
-                permissions.  We can expect these tools in a UNIX shell.
-            -->
-           
-            <parallel threadCount="2">
-			<sequential>
-				
-				<get dest="${depends}" skipexisting="true" ignoreerrors="false" >
-					<url url="${linux.androidsdk.url}"/>
-				</get>
-				<exec executable="tar" failonerror="true" >
-					<arg line="zxf '${depends}/${linux.androidsdk.filename}' -C '${depends}'" />
-				</exec>
-				<echo>${linux.androidsdk.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
+            <exec executable="unzip" failonerror="true"  >
+                <arg line="-o -d '${depends}' '${depends}/${cocos2d.filename}'" />
+            </exec>
 
-			</sequential>
-			<sequential>
-			
-				<get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
-					<url url="${linux.cocos2d.url}"/>
-				</get>
+            <echo>${cocos2d.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
 
-				<exec executable="unzip" failonerror="true"  >
-					<arg line="-o -d '${depends}' '${depends}/${linux.cocos2d.filename}'" />
-				</exec>
+        </sequential>
+        <sequential>
+            
+            <get dest="${depends}" skipexisting="true" ignoreerrors="false" >
+                <url url="${linux.androidndk.url}"/>
+            </get>
+            <!-- Evil, self-extracting executable for ndk -->
+            <exec executable="sh" dir="${depends}" failonerror="true"  >
+                <arg line="-c 'chmod +x ${linux.androidndk.filename}'" />
+            </exec>
+            <exec executable="sh" dir="${depends}" failonerror="true"  >
+                <arg line="-c './${linux.androidndk.filename} -y'" />
+            </exec>
+            <echo>${linux.androidndk.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
 
-				<echo>${linux.cocos2d.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
-
-			</sequential>
-			<sequential>
-				
-				<get dest="${depends}" skipexisting="true" ignoreerrors="false" >
-					<url url="${linux.androidndk.url}"/>
-				</get>
-				<!-- Evil, self-extracting executable for ndk -->
-				<exec executable="sh" dir="${depends}" failonerror="true"  >
-					<arg line="-c 'chmod +x ${linux.androidndk.filename}'" />
-				</exec>
-				<exec executable="sh" dir="${depends}" failonerror="true"  >
-					<arg line="-c './${linux.androidndk.filename} -y'" />
-				</exec>
-				<echo>${linux.androidndk.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
-
-			</sequential>
-            </parallel>
+        </sequential>
+        </parallel>
 
 
 <echo>Invoke 'source configure.sh' to set up build environments, or add configure.sh
 to your ~/.bash_profile
 </echo>
-        </sequential>
     </target>
 
     <target name="configure.linux" if="is.linux" >
@@ -351,9 +366,9 @@ to your ~/.bash_profile
 # Set up build environment.
 export ANT_ROOT=${ANT_ROOT}
 #export PATH=$ANT_ROOT/bin:$PATH
-export COCOS_CONSOLE_ROOT=${basedir}/${depends}/${linux.cocos2d.unpacked}/tools/cocos2d-console/bin
+export COCOS_CONSOLE_ROOT=${basedir}/${depends}/${cocos2d.unpacked}/tools/cocos2d-console/bin
 export PATH=$COCOS_CONSOLE_ROOT:$PATH
-export COCOS_FRAMEWORKS=${basedir}/${depends}/${linux.cocos2d.unpacked}/frameworks
+export COCOS_FRAMEWORKS=${basedir}/${depends}/${cocos2d.unpacked}/frameworks
 export PATH=$COCOS_FRAMEWORKS:$PATH
 export NDK_ROOT=${basedir}/${depends}/${linux.androidndk.unpacked}
 export ANDROID_SDK_ROOT=${basedir}/${depends}/${linux.androidsdk.unpacked}
@@ -367,8 +382,10 @@ export ANDROID_SDK_ROOT=${basedir}/${depends}/${linux.androidsdk.unpacked}
 SHELL=sh
 SHELL.c=-c
 ANT_ROOT=${ANT_ROOT}
-COCOS_CONSOLE_ROOT=${basedir}/${depends}/${linux.cocos2d.unpacked}/tools/cocos2d-console/bin
-COCOS_FRAMEWORKS=${basedir}/${depends}/${linux.cocos2d.unpacked}/frameworks
+ANT_CONTRIB=${basedir}/${depends}/${ant.contrib.unpacked}
+
+COCOS_CONSOLE_ROOT=${basedir}/${depends}/${cocos2d.unpacked}/tools/cocos2d-console/bin
+COCOS_FRAMEWORKS=${basedir}/${depends}/${cocos2d.unpacked}/frameworks
 
 NDK_ROOT=${basedir}/${depends}/${linux.androidndk.unpacked}
 ANDROID_SDK_ROOT=${basedir}/${depends}/${linux.androidsdk.unpacked}

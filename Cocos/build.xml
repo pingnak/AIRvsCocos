@@ -36,12 +36,26 @@
 	<echoproperties/>
 	-->
 
+	<!-- Load ant-contrib -->
+    <taskdef resource="net/sf/antcontrib/antlib.xml">
+        <classpath>
+            <pathelement location="${ANT_CONTRIB}"/>
+        </classpath>
+    </taskdef>
+	
     <!-- Invoke cocos in various prescribed manners -->
 	<macrodef name="macro-cocos">
 		<attribute name="command"/>		<!-- Command line for cocos -->
 		<attribute name="dirname" default="${targetname}"/>
 		<sequential>
 			<tstamp />
+            
+            <!--
+                Invoke cocos
+                
+                -p win32, web, mac, wp8, metro, linux, android, ios
+
+            -->
 			<exec executable="${SHELL}" dir="@{dirname}" failonerror="true" searchpath="true" >
 			    <env key="ANT_ROOT" value="${ANT_ROOT}" />
 			    <env key="COCOS_CONSOLE_ROOT" value="${COCOS_CONSOLE_ROOT}" />
@@ -93,11 +107,8 @@
 ${targetname}
 </echo>
 
-
         <!-- Have cocos make the project -->
-		<macro-cocos dirname="." command="new ${targetname} --package ${targetname} --language js" />
-
-        <!-- Do initial transfer to project (the rest are incremental) -->
+		<macro-cocos dirname="." command="new ${targetname} --package ${app.id} --language js" />
 
         <!-- 
             Big, bad iOS BUG in cocos2d-js-v3.3:
@@ -119,21 +130,15 @@ ${targetname}
             There, I just saved you a week off your app submission.
             
             Just for contrast, 'Google Play' takes about five minutes.
+
+            Anyway, fixing the file names in this ONE PLACE cures the source of 
+            that cancer.
+            
         -->
         <replaceregexp match="${targetname} iOS" replace="${targetname}" flags="g" byline="true">
             <fileset file="${targetname}/frameworks/runtime-src/proj.ios_mac/Example.xcodeproj/project.pbxproj" />
         </replaceregexp>
 
-        <!--
-            Fix 'our' version of Android SDK manifest
-        -->        
-        <replaceregexp match="{{PACKAGE_ID}}" replace="${app.id}" flags="g" byline="true">
-            <fileset file="myframeworks/android/AndroidManifest.xml" />
-        </replaceregexp>
-        <replaceregexp match="{{ORIENTATION}}" replace="${app.orientation}" flags="g" byline="true">
-            <fileset file="myframeworks/android/AndroidManifest.xml" />
-        </replaceregexp>
-        
 <property name="android.certificate.absolute" location="${android.certificate}" />
 <echo file="${targetname}/frameworks/runtime-src/proj.android/ant.properties" append="true" >
 # Tack on keystore data, as cocos would have made you type it in.
@@ -146,14 +151,140 @@ key.store.password=${android.certificate.password}
 key.alias=android.keystore
 key.alias.password=${android.certificate.alias.password}
 </echo>
+
+        <!-- Make copy of project web base64 encoded images (only if newer) -->
+        <copy todir="myframeworks/web" >
+            <fileset dir="${targetname}/frameworks/cocos2d-html5">
+                <include name="Base64Images.js" />
+            </fileset>
+        </copy>
         
+        <!-- Make copy of project AndroidManifest.xml (only if newer) -->
+        <copy todir="myframeworks/android" >
+            <fileset dir="${targetname}/frameworks/runtime-src/proj.android/">
+                <include name="AndroidManifest.xml" />
+            </fileset>
+        </copy>
+
+        <!-- Make copy of Android icons/artwork (only if newer) -->
+        <copy todir="myframeworks/android/res" >
+            <fileset dir="${targetname}/frameworks/runtime-src/proj.android/res">
+                <include name="**/*.png" />
+                <include name="**/*.jpg" />
+                <include name="**/*.gif" />
+            </fileset>
+        </copy>
+
+        <!-- Make copy of iOS icons/artwork (only if newer) -->
+        <copy todir="myframeworks/ios/res" >
+            <fileset dir="${targetname}/frameworks/runtime-src/proj.ios_mac/ios">
+                <include name="**/*.png" />
+                <include name="**/*.jpg" />
+                <include name="**/*.gif" />
+            </fileset>
+        </copy>
+
+        <!-- Make copy of Mac icons/artwork (only if newer) -->
+        <copy todir="myframeworks/mac/res" >
+            <fileset dir="${targetname}/frameworks/runtime-src/proj.ios_mac/mac">
+                <include name="**/*.icns" />
+                <include name="**/*.png" />
+                <include name="**/*.jpg" />
+                <include name="**/*.gif" />
+            </fileset>
+        </copy>
+        
+        <!-- Make copy of Linux icons/artwork (only if newer) -->
+        <copy todir="myframeworks/linux/res" >
+            <fileset dir="${targetname}/frameworks/runtime-src/proj.linux">
+                <include name="**/*.png" />
+                <include name="**/*.jpg" />
+                <include name="**/*.gif" />
+            </fileset>
+        </copy>
+
+        <!-- Make copy of Windows icons/artwork (only if newer) -->
+        <copy todir="myframeworks/win32/res" >
+            <fileset dir="${targetname}/frameworks/runtime-src/proj.win32">
+                <include name="**/*.ico" />
+                <include name="**/*.png" />
+                <include name="**/*.jpg" />
+                <include name="**/*.gif" />
+            </fileset>
+        </copy>
+        
+        <!-- Make copy of Windows 8.1 icons/artwork (only if newer) -->
+        <copy todir="myframeworks/win8.1/res" >
+            <fileset dir="${targetname}/frameworks/runtime-src/proj.win8.1-universal">
+                <include name="**/*.png" />
+                <include name="**/*.jpg" />
+                <include name="**/*.gif" />
+            </fileset>
+        </copy>
+
+        <!-- Make copy of Windows Phone 8 icons/artwork (only if newer) -->
+        <copy todir="myframeworks/wp8/res" >
+            <fileset dir="${targetname}/frameworks/runtime-src/proj.wp8-xaml">
+                <include name="**/*.png" />
+                <include name="**/*.jpg" />
+                <include name="**/*.gif" />
+            </fileset>
+        </copy>
     </target>
 
     <target name="web.configure" >
         <echo>Updating web resources...</echo>
 		
+        <!-- Copy the artwork back -->
+        <copy todir="${targetname}/frameworks/cocos2d-html5" >
+            <fileset dir="myframeworks/web">
+                <include name="Base64Images.js" />
+            </fileset>
+        </copy>
     </target>
-    
+
+    <!--
+        Web is the best supported version, especially to debug in.
+        
+        Most browsers have an excellent 'developer tools' menu.  Much better than
+        you'll find in 'Eclipse' or other GUI front-ends.  If there's something
+        'logically' wrong with your app, this is the only deep inspection tool
+        that works.
+        
+        However, you'll have to resort to tracing and shotgun debugging, if it 
+        works fine in javascript, but not so well on one of the other target 
+        platforms.  The debuggers Cocos2d IDE provides were nearly useless.
+
+        Many browsers even have some kind of device emulation... so you can 
+        spend more time on the desktop, tinkering with the particulars of how
+        it lays out 'wrong' on a banana-shaped phone.
+        https://developers.google.com/web/fundamentals/tools/devices/browseremulation?hl=en
+
+        Safari hides it.  You need to go to 'Preferences->Advanced Tab', and
+        click the checkbox 'Show Develop mnu in menu bar', at the bottom.  Then 
+        you'll get a 'Develop' menu item. You need it to trace/debug iOS devices.
+
+        On your iThing (iOS 6.0 or above), find the Safari settings, scroll to 
+        the 'Advanced' settings, at the very bottom, and turn on 'Web Inspector'.
+        
+        Theoretically, when you plug an ios device in, and launch the web browser
+        on your web page, it will end up in the 'Developer' menu, where you can 
+        connect to it.
+        
+        Similarly, Chrome is needed to trace/debug Chrome devices, but at least
+        there was a single, coherent article about that.
+        
+        https://developer.chrome.com/devtools/docs/remote-debugging
+
+        Most browsers have a hotkey... Ctrl+Alt+I, Cmd+Alt+I 
+        
+        For IE, it's F-12... unless it's greyed out.  Then you get to try all
+        kinds of things, because Microsoft decided you weren't worthy.  Then you
+        get to google for answers, until one of them 'fixes' it.
+        
+        Try 'Reset IE', in the 'Advanced' settings tab.
+        
+    -->    
     <target name="web" description="Make Web" depends="web.configure" >
 		<macro-cocos command="compile -p web -m release --advanced" />
     </target>
@@ -181,13 +312,28 @@ key.alias.password=${android.certificate.alias.password}
 		</exec>
 	</target>
 
-    <target name="android" description="Make Android" depends="androidcert" >
-		<macro-cocos command="compile -p android -m release --ndk-mode release" /> 
-    </target>
-
     <target name="android.configure" depends="androidcert" >
         <echo>Updating android resources...</echo>
 		
+        <!-- Update AndroidManifest.xml (only if newer) -->
+        <copy todir="${targetname}/frameworks/runtime-src/proj.android" >
+            <fileset dir="myframeworks/android/">
+                <include name="AndroidManifest.xml" />
+            </fileset>
+        </copy>
+
+        <!-- Update Android icons/artwork (only if newer) -->
+        <copy todir="myframeworks/android/res" >
+            <fileset dir="${targetname}/frameworks/runtime-src/proj.android/res">
+                <include name="**/*.png" />
+                <include name="**/*.jpg" />
+                <include name="**/*.gif" />
+            </fileset>
+        </copy>
+    </target>
+
+    <target name="android" description="Make Android" depends="android.configure" >
+		<macro-cocos command="compile -p android -m release --ndk-mode release" /> 
     </target>
     
     <target name="runandroid" description="Run Android" depends="android.configure" >
@@ -195,11 +341,12 @@ key.alias.password=${android.certificate.alias.password}
     </target>
 
     <target name="debugandroid" description="Debug Android" depends="android.configure" >
-		<macro-cocos command="compile -p android -m debug --ndk-mode debug" /> 
+		<macro-cocos command="run -p android -m debug --ndk-mode debug" /> 
     </target>
     
 
     <!-- Note: You need a Mac, with XCode (from app store) for iOS/OS X. -->
+
     <condition property="is.osx">
         <and>
             <os family="mac"/>
@@ -209,54 +356,78 @@ key.alias.password=${android.certificate.alias.password}
 
     <target name="ios.configure" if="is.osx" >
         <echo>Updating iOS resources...</echo>
+
+        <!-- Update icons/artwork (only if newer) -->
+        <copy todir="${targetname}/frameworks/runtime-src/proj.ios_mac/ios" >
+            <fileset dir="myframeworks/ios/res">
+                <include name="**/*.png" />
+                <include name="**/*.jpg" />
+                <include name="**/*.gif" />
+            </fileset>
+        </copy>
 		
     </target>
     
     <target name="ios" description="Make iOS" depends="ios.configure" if="is.osx" >
-		<macro-cocos command="compile ios -m release -t ${targetname} --sign-identity '${ios.sign}'" />
+		<macro-cocos command="compile -p ios -m release -t ${targetname} --sign-identity '${ios.sign}'" />
     </target>
 
     <target name="runios"  description="Run iOS" depends="ios.configure" if="is.osx" >
-		<macro-cocos command="run ios -m release -t ${targetname} --sign-identity '${ios.sign}'" />
+		<macro-cocos command="run -p ios -m release -t ${targetname} --sign-identity '${ios.sign}'" />
+		<!-- 
+		    https://github.com/libimobiledevice/ideviceinstaller
+		
+		    You can install ideviceinstaller from Homebrew http://brew.sh
+		    
+		    The biggest obstacle for dependencies is xcode, but you already did that.
+		    
+		    Homebrew or MacPorts would have also installed 'ant' without any 
+		    flaming hoops.  Similar to 'sudo apt-get ...', in a Debian Linux.
+
+		    You'll probably also want SoX, LAME, ImageMagick, pngquant, optipng, 
+		    while you're installing things with that.  
+		    
+		    Anyways, launch to a real iThing, using ad-hoc mobileprovision.
+		    
+		    It will (and should) fail with a .ipa, signed for the app store.
+		-->
+        <exec executable="ideviceinstaller" dir="${targetname}/publish/ios" failonerror="false" searchpath="true" >
+            <arg line="--uninstall ${app.id}" />
+        </exec>
+        <exec executable="ideviceinstaller" dir="${targetname}/publish/ios" failonerror="false" searchpath="true" >
+            <arg line="--install ${targetname}.ipa" />
+        </exec>
     </target>
 
     <target name="debugios" description="Debug iOS" depends="ios.configure" if="is.osx" >
-		<macro-cocos command="compile ios -m debug -t ${targetname} --sign-identity '${ios.sign}'" />
+		<macro-cocos command="run -p ios -m debug -t ${targetname} --sign-identity '${ios.sign}'" />
     </target>
     
-    <!-- Note: You need a Mac, with XCode (from app store). -->
-
     <target name="osx.configure" if="is.osx" >
         <echo>Updating OS X resources...</echo>
+
+        <!-- Update icons/artwork (only if newer) -->
+        <copy todir="${targetname}/frameworks/runtime-src/proj.ios_mac/mac" >
+            <fileset dir="myframeworks/mac/res">
+                <include name="**/*.icns" />
+                <include name="**/*.png" />
+                <include name="**/*.jpg" />
+                <include name="**/*.gif" />
+            </fileset>
+        </copy>
 		
     </target>
 
-    <target name="osx" description="Make OS X" depends="osx.configure" if="is.osx" >
+    <target name="mac" description="Make OS X" depends="osx.configure" if="is.osx" >
+		<macro-cocos command="compile -p mac -m release" />
     </target>
 
-    <target name="runosx" description="Run OS X" depends="osx.configure" if="is.osx" >
+    <target name="runmac" description="Run OS X" depends="osx.configure" if="is.osx" >
+		<macro-cocos command="run -p mac -m release" />
     </target>
 
-    <target name="debugosx" description="Debug OS X" depends="osx.configure" if="is.osx" >
-    </target>
-    
-    <!-- Note: You need Windows and Visual Studio to build a Windows target -->
-    <condition property="is.windows">
-        <os family="windows" />
-    </condition>
-
-    <target name="windows.configure" if="is.windows" >
-        <echo>Updating Windows resources...</echo>
-		
-    </target>
-
-    <target name="windows" description="Make Windows" depends="windows.configure" if="is.windows" >
-    </target>
-
-    <target name="runwindows" description="Run Android" depends="windows.configure" if="is.windows" >
-    </target>
-    
-    <target name="debugwindows" description="Debug Windows" depends="windows.configure" if="is.windows" >
+    <target name="debugmac" description="Debug OS X" depends="osx.configure" if="is.osx" >
+		<macro-cocos command="run -p mac -m debug" />
     </target>
 
     <!-- Note: You need Linux to do Linux -->
@@ -269,20 +440,116 @@ key.alias.password=${android.certificate.alias.password}
 
     <target name="linux.configure" if="is.linux" >
         <echo>Updating Linux resources...</echo>
+
+        <!-- Update Linux icons/artwork (only if newer) -->
+        <copy todir="${targetname}/frameworks/runtime-src/proj.linux" >
+            <fileset dir="myframeworks/linux/res">
+                <include name="**/*.png" />
+                <include name="**/*.jpg" />
+                <include name="**/*.gif" />
+            </fileset>
+        </copy>
 		
     </target>
 
+    <!-- Linux needs to be a Debian child -->
     <target name="linux" description="Make Linux" depends="linux.configure" if="is.linux" >
+		<macro-cocos command="compile -p win32 -m release" />
     </target>
 
     <target name="runlinux" description="Run Linux" depends="linux.configure" if="is.linux" >
+		<macro-cocos command="run -p win32 -m release" />
     </target>
 	
     <target name="debuglinux" description="Debug Linux" depends="linux.configure" if="is.linux" >
+		<macro-cocos command="run -p win32 -m debug" />
+    </target>
+    
+    <!-- Note: You need Windows and Visual Studio to build a Windows target -->
+
+    <condition property="is.windows">
+        <os family="windows" />
+    </condition>
+
+    <target name="windows.configure" if="is.windows" >
+        <echo>Updating Windows resources...</echo>
+		
+        <copy todir="myframeworks/win32/res" >
+            <fileset dir="${targetname}/frameworks/runtime-src/proj.win32">
+                <include name="**/*.ico" />
+                <include name="**/*.png" />
+                <include name="**/*.jpg" />
+                <include name="**/*.gif" />
+            </fileset>
+        </copy>
+        
     </target>
 
+    <target name="win32" description="Make Windows" depends="windows.configure" if="is.windows" >
+		<macro-cocos command="compile -p win32 -m release" />
+    </target>
+
+    <target name="runwin32" description="Run Android" depends="windows.configure" if="is.windows" >
+		<macro-cocos command="run -p win32 -m release" />
+    </target>
+    
+    <target name="debugwin32" description="Debug Windows" depends="windows.configure" if="is.windows" >
+		<macro-cocos command="run -p win32 -m debug" />
+    </target>
+
+    <target name="win8.1.configure" if="is.windows" >
+        <echo>Updating Win8.1 resources...</echo>
+		
+        <copy todir="myframeworks/win8.1/res" >
+            <fileset dir="${targetname}/frameworks/runtime-src/proj.win8.1-universal">
+                <include name="**/*.png" />
+                <include name="**/*.jpg" />
+                <include name="**/*.gif" />
+            </fileset>
+        </copy>
+        
+    </target>
+
+    <target name="win8.1" description="Make Win8.1" depends="win8.1.configure" if="is.windows" >
+		<macro-cocos command="compile -p win8.1 -m release" />
+    </target>
+
+    <target name="runwin8.1" description="Run Android" depends="win8.1.configure" if="is.windows" >
+		<macro-cocos command="run -p win8.1 -m release" />
+    </target>
+    
+    <target name="debugwin8.1" description="Debug Win8.1" depends="win8.1.configure" if="is.windows" >
+		<macro-cocos command="run -p win8.1 -m debug" />
+    </target>
+    
+    <target name="wp8.configure" if="is.windows" >
+        <echo>Updating Wp8 resources...</echo>
+		
+        <copy todir="myframeworks/wp8/res" >
+            <fileset dir="${targetname}/frameworks/runtime-src/proj.wp8-xaml">
+                <include name="**/*.png" />
+                <include name="**/*.jpg" />
+                <include name="**/*.gif" />
+            </fileset>
+        </copy>
+        
+    </target>
+
+    <target name="wp8" description="Make Wp8" depends="wp8.configure" if="is.windows" >
+		<macro-cocos command="compile -p wp8 -m release" />
+    </target>
+
+    <target name="runwp8" description="Run Android" depends="wp8.configure" if="is.windows" >
+		<macro-cocos command="run -p wp8 -m release" />
+    </target>
+    
+    <target name="debugwp8" description="Debug Wp8" depends="wp8.configure" if="is.windows" >
+		<macro-cocos command="run -p wp8 -m debug" />
+    </target>
+
+    
     <!-- Hint: Remove unwanted projects from 'depends=' -->
-    <target name="all" description="Make all release targets" depends="web,android,ios,osx,windows,linux" >
+    <target name="all" description="Make all release targets" depends="web,android,ios,mac,win32,linux" >
         
     </target>
     

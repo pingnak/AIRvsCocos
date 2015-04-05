@@ -1,3 +1,5 @@
 #Cocos2d-js boilerplate
+# Foresake all of Cocos2d's project tree from version control.
+# We can just rebuild it, so it's tens of thousands of files of boilerplatr and  
+# intermediate files with a few minor tweaks scattered among them.
 Example
-# May be more 'selective', but for now, just throw out the baby with the bath water.
