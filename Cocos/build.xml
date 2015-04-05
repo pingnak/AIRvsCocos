@@ -36,13 +36,6 @@
 	<echoproperties/>
 	-->
 
-	<!-- Load ant-contrib -->
-    <taskdef resource="net/sf/antcontrib/antlib.xml">
-        <classpath>
-            <pathelement location="${ANT_CONTRIB}"/>
-        </classpath>
-    </taskdef>
-	
     <!-- Invoke cocos in various prescribed manners -->
 	<macrodef name="macro-cocos">
 		<attribute name="command"/>		<!-- Command line for cocos -->
@@ -93,7 +86,6 @@
             <property name="rxFirstArg" value="[ \t]*\(([^,]*)," />
             <property name="rxGetArg" value=",([^,]*)," />
             <property name="rxLastArg" value=",([^)]*)\)" />
-	    
             <!-- Transfer+translate source code, given those attributes -->
             <copy todir="${targetname}/src" >
                 <fileset dir="src">
@@ -111,9 +103,13 @@
 				</filterchain> 
             </copy>
 
-            <!-- Generate resource references from resources in res -->
-    
-            <!-- Generate resource code references from code in src -->
+            <copy todir="${targetname}/res" >
+                <fileset dir="res">
+                    <!-- I was going to be picky, but the list got longer and longer... -->
+                    <include name="**/*" />
+                </fileset>
+            </copy>            
+
 	    </sequential>
     
 	</macrodef>
@@ -138,13 +134,13 @@ ${targetname}
 		<macro-cocos dirname="." command="new ${targetname} --package ${app.id} --language js" />
 
         <!-- 
-            Big, bad iOS BUG in cocos2d-js-v3.3:
+            Big, bad iOS BUG in cocos2d-js-v3.3, and still in v3.5:
             
             It names iOS project with ' iOS' on the end.  
             
             Apple iTunes connect will initially accept this without complaing, 
             then they will wait a week, and then reject it!
-            
+
             Reason: 
             
             "We found that your app does not comply with the Guidelines for
@@ -600,7 +596,7 @@ key.alias.password=${android.certificate.alias.password}
 
     
     <!-- Hint: Remove unwanted projects from 'depends=' -->
-    <target name="all" description="Make all release targets" depends="web,android,ios,mac,win32,linux" >
+    <target name="all" description="Make all release targets" depends="web,android,ios,mac,linux,win32,win8.1,wp8" >
         
     </target>
     
