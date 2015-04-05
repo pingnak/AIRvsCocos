@@ -67,6 +67,13 @@
                 <arg line="${SHELL.c} 'cocos @{command}'" /> 
 
 			    <!-- Filter stderr, to point back at original source paths... -->
+				<redirector>
+					<errorfilterchain>
+						<replaceregex 
+							pattern="@{dirname}/src[/\\]" 
+							replace="src/" />
+					</errorfilterchain>
+				</redirector>			    
             </exec>
         </sequential>
 	</macrodef>
@@ -74,19 +81,39 @@
 	<macrodef name="macro-transfer">
 		<attribute name="debug"/>		<!-- Debug flag -->
 		<attribute name="release"/>		<!-- Complimentary Release flag -->
-		<attribute name="adware"/>		<!-- Enable adware -->
 		<!-- etc. -->
 
 	    <sequential>
-	    <!-- Transfer icons -->
 
-	    <!-- Transfer res; optimize images, convert all sounds to mp3 -->
+            <!-- Regular expressions used to parse macro-like insertions -->
+            <property name="rxFunc" value="(^|[\t ]+)" />
+            <property name="rxConst" value="=(^|[\t (]+)" />
+            <property name="rxEatArgs" value="[ \t]*(\([^)]*\);)" />
+            <property name="rxArg" value="[ \t]*\([\t ]*(.*)[\t ]*\);" />
+            <property name="rxFirstArg" value="[ \t]*\(([^,]*)," />
+            <property name="rxGetArg" value=",([^,]*)," />
+            <property name="rxLastArg" value=",([^)]*)\)" />
+	    
+            <!-- Transfer+translate source code, given those attributes -->
+            <copy todir="${targetname}/src" >
+                <fileset dir="src">
+                    <include name="**/*.js" />
+                </fileset>
+                <filterchain>
+                <!-- Example filters
+					<replaceregex flags="g"
+						pattern="${rxFunc}trace${rxArg}"
+						replace="\1{ cc.trace(\2); }"/>                
+					<replaceregex flags="g"
+						pattern="${rxFunc}trace${rxArg}"
+						replace="\1 /*trace(\2);*/"/>                
+                -->
+				</filterchain> 
+            </copy>
 
-	    <!-- Transfer+translate source code, given those attributes -->
-
-	    <!-- Generate resource references from resources in res -->
-
-	    <!-- Generate resource code references from code in src -->
+            <!-- Generate resource references from resources in res -->
+    
+            <!-- Generate resource code references from code in src -->
 	    </sequential>
     
 	</macrodef>
@@ -286,14 +313,17 @@ key.alias.password=${android.certificate.alias.password}
         
     -->    
     <target name="web" description="Make Web" depends="web.configure" >
+        <macro-transfer debug="false" release="true" />
 		<macro-cocos command="compile -p web -m release --advanced" />
     </target>
 
     <target name="runweb" description="Run Web" depends="web.configure" >
+        <macro-transfer debug="false" release="true" />
 		<macro-cocos command="run -p web -m release --advanced" />
     </target>
 
     <target name="debugweb" description="Debug Web" depends="web.configure" >
+        <macro-transfer debug="true" release="false" />
 		<macro-cocos command="run -p web -m debug" />
     </target>
 
@@ -333,14 +363,17 @@ key.alias.password=${android.certificate.alias.password}
     </target>
 
     <target name="android" description="Make Android" depends="android.configure" >
+        <macro-transfer debug="false" release="true" />
 		<macro-cocos command="compile -p android -m release --ndk-mode release" /> 
     </target>
     
     <target name="runandroid" description="Run Android" depends="android.configure" >
+        <macro-transfer debug="false" release="true" />
 		<macro-cocos command="run -p android -m release --ndk-mode release" />
     </target>
 
     <target name="debugandroid" description="Debug Android" depends="android.configure" >
+        <macro-transfer debug="true" release="false" />
 		<macro-cocos command="run -p android -m debug --ndk-mode debug" /> 
     </target>
     
@@ -369,10 +402,12 @@ key.alias.password=${android.certificate.alias.password}
     </target>
     
     <target name="ios" description="Make iOS" depends="ios.configure" if="is.osx" >
+        <macro-transfer debug="false" release="true" />
 		<macro-cocos command="compile -p ios -m release -t ${targetname} --sign-identity '${ios.sign}'" />
     </target>
 
     <target name="runios"  description="Run iOS" depends="ios.configure" if="is.osx" >
+        <macro-transfer debug="false" release="true" />
 		<macro-cocos command="run -p ios -m release -t ${targetname} --sign-identity '${ios.sign}'" />
 		<!-- 
 		    https://github.com/libimobiledevice/ideviceinstaller
@@ -400,6 +435,7 @@ key.alias.password=${android.certificate.alias.password}
     </target>
 
     <target name="debugios" description="Debug iOS" depends="ios.configure" if="is.osx" >
+        <macro-transfer debug="true" release="false" />
 		<macro-cocos command="run -p ios -m debug -t ${targetname} --sign-identity '${ios.sign}'" />
     </target>
     
@@ -419,14 +455,17 @@ key.alias.password=${android.certificate.alias.password}
     </target>
 
     <target name="mac" description="Make OS X" depends="osx.configure" if="is.osx" >
+        <macro-transfer debug="false" release="true" />
 		<macro-cocos command="compile -p mac -m release" />
     </target>
 
     <target name="runmac" description="Run OS X" depends="osx.configure" if="is.osx" >
+        <macro-transfer debug="false" release="true" />
 		<macro-cocos command="run -p mac -m release" />
     </target>
 
     <target name="debugmac" description="Debug OS X" depends="osx.configure" if="is.osx" >
+        <macro-transfer debug="true" release="false" />
 		<macro-cocos command="run -p mac -m debug" />
     </target>
 
@@ -454,14 +493,17 @@ key.alias.password=${android.certificate.alias.password}
 
     <!-- Linux needs to be a Debian child -->
     <target name="linux" description="Make Linux" depends="linux.configure" if="is.linux" >
+        <macro-transfer debug="false" release="true" />
 		<macro-cocos command="compile -p win32 -m release" />
     </target>
 
     <target name="runlinux" description="Run Linux" depends="linux.configure" if="is.linux" >
+        <macro-transfer debug="false" release="true" />
 		<macro-cocos command="run -p win32 -m release" />
     </target>
 	
     <target name="debuglinux" description="Debug Linux" depends="linux.configure" if="is.linux" >
+        <macro-transfer debug="true" release="false" />
 		<macro-cocos command="run -p win32 -m debug" />
     </target>
     
@@ -486,14 +528,17 @@ key.alias.password=${android.certificate.alias.password}
     </target>
 
     <target name="win32" description="Make Windows" depends="windows.configure" if="is.windows" >
+        <macro-transfer debug="false" release="true" />
 		<macro-cocos command="compile -p win32 -m release" />
     </target>
 
     <target name="runwin32" description="Run Android" depends="windows.configure" if="is.windows" >
+        <macro-transfer debug="false" release="true" />
 		<macro-cocos command="run -p win32 -m release" />
     </target>
     
     <target name="debugwin32" description="Debug Windows" depends="windows.configure" if="is.windows" >
+        <macro-transfer debug="true" release="false" />
 		<macro-cocos command="run -p win32 -m debug" />
     </target>
 
@@ -511,14 +556,17 @@ key.alias.password=${android.certificate.alias.password}
     </target>
 
     <target name="win8.1" description="Make Win8.1" depends="win8.1.configure" if="is.windows" >
+        <macro-transfer debug="false" release="true" />
 		<macro-cocos command="compile -p win8.1 -m release" />
     </target>
 
     <target name="runwin8.1" description="Run Android" depends="win8.1.configure" if="is.windows" >
+        <macro-transfer debug="false" release="true" />
 		<macro-cocos command="run -p win8.1 -m release" />
     </target>
     
     <target name="debugwin8.1" description="Debug Win8.1" depends="win8.1.configure" if="is.windows" >
+        <macro-transfer debug="true" release="false" />
 		<macro-cocos command="run -p win8.1 -m debug" />
     </target>
     
@@ -536,14 +584,17 @@ key.alias.password=${android.certificate.alias.password}
     </target>
 
     <target name="wp8" description="Make Wp8" depends="wp8.configure" if="is.windows" >
+        <macro-transfer debug="false" release="true" />
 		<macro-cocos command="compile -p wp8 -m release" />
     </target>
 
     <target name="runwp8" description="Run Android" depends="wp8.configure" if="is.windows" >
+        <macro-transfer debug="false" release="true" />
 		<macro-cocos command="run -p wp8 -m release" />
     </target>
     
     <target name="debugwp8" description="Debug Wp8" depends="wp8.configure" if="is.windows" >
+        <macro-transfer debug="true" release="false" />
 		<macro-cocos command="run -p wp8 -m debug" />
     </target>
 
