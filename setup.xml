@@ -34,18 +34,6 @@
 
             Note: In Windowsland, all files are 'executable', so ant/JAVA 
             has no problem with permissions.
-            
-            Ant's 'progress' option for downloads is useless.  It just fills
-            the screen with dots... and then tells you nothing.
-            
-            So, to see if it's actually downloading or downloafing... 
-            
-                'Task Manager' or 'Resource Monitor' for Windows
-                
-                'Activity Monitor' for OS X
-                
-                'System Monitor' or 'Performance Monitor' or other names, for Linux
-            
         -->
         <parallel threadCount="2">
             <sequential>
@@ -63,7 +51,6 @@
                     <arg line="/I ${windows.python.filename}" />
                 </exec>
                 <echo>${windows.python.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
-                <echo>You can indirectly monitor network activity with 'Task Manager' (right-click on start menu bar).</echo>
             </sequential>
             <sequential>
                 <get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
@@ -71,7 +58,6 @@
                 </get>
                 <unzip src="${depends}/${windows.AIRSDK.filename}" dest="${depends}/${windows.AIRSDK.unpacked}" />
                 <echo>${windows.AIRSDK.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
-                <echo>You can indirectly monitor network activity with 'Task Manager' (right-click on start menu bar).</echo>
             </sequential>
             <sequential>
                 <get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
@@ -79,7 +65,6 @@
                 </get>
                 <unzip src="${depends}/${cocos2d.filename}" dest="${depends}" />
                 <echo>${cocos2d.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
-                <echo>You can indirectly monitor network activity with 'Task Manager' (right-click on start menu bar).</echo>
             </sequential>
             <sequential>
                 <get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
@@ -90,7 +75,6 @@
                     <arg line="/c ${windows.androidndk.filename} -y" />
                 </exec>
                 <echo>${windows.androidndk.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
-                <echo>You can indirectly monitor network activity with 'Task Manager' (right-click on start menu bar).</echo>
             </sequential>
             <sequential>
                 <get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
@@ -98,7 +82,6 @@
                 </get>
                 <unzip src="${depends}/${windows.androidsdk.filename}" dest="${depends}" />
                 <echo>${windows.androidsdk.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
-                <echo>You can indirectly monitor network activity with 'Task Manager' (right-click on start menu bar).</echo>
             </sequential>
         </parallel>
         
@@ -194,7 +177,6 @@ GNU.TAIL=tail
                     <arg line="jxf '${depends}/${osx.AIRSDK.filename}' -C '${depends}/${osx.AIRSDK.unpacked}'" />
                 </exec>
                 <echo>${osx.AIRSDK.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
-                <echo>You can indirectly monitor downloads with 'Activity Monitor'.</echo>              
             </sequential>
             
             <sequential>
@@ -205,7 +187,6 @@ GNU.TAIL=tail
                     <arg line="-o -d '${depends}' '${depends}/${cocos2d.filename}'" />
                 </exec>
                 <echo>${cocos2d.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
-                <echo>You can indirectly monitor network activity with 'Activity Monitor'.</echo>              
             </sequential>
 
             <sequential>
@@ -219,7 +200,6 @@ GNU.TAIL=tail
                     <arg line="-c './${osx.androidndk.filename} -y'" />
                 </exec>
                 <echo>${osx.androidndk.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
-                <echo>You can indirectly monitor network activity with 'Activity Monitor'.</echo>              
             </sequential>
             
             <sequential>
@@ -230,7 +210,6 @@ GNU.TAIL=tail
                     <arg line="-o -d '${depends}' '${depends}/${osx.androidsdk.filename}'" />
                 </exec>
                 <echo>${osx.androidsdk.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
-                <echo>You can indirectly monitor network activity with 'Activity Monitor'.</echo>              
             </sequential>
 
         </parallel>
@@ -336,7 +315,6 @@ GNU.TAIL=tail
                 <arg line="zxf '${depends}/${linux.androidsdk.filename}' -C '${depends}'" />
             </exec>
             <echo>${linux.androidsdk.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
-            <echo>You can indirectly monitor download activity with 'System Monitor'.</echo>              
 
         </sequential>
         <sequential>
@@ -350,7 +328,6 @@ GNU.TAIL=tail
             </exec>
 
             <echo>${cocos2d.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
-            <echo>You can indirectly monitor download activity with 'System Monitor'.</echo>              
 
         </sequential>
         <sequential>
@@ -366,7 +343,6 @@ GNU.TAIL=tail
                 <arg line="-c './${linux.androidndk.filename} -y'" />
             </exec>
             <echo>${linux.androidndk.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
-            <echo>You can indirectly monitor download activity with 'System Monitor'.</echo>              
 
         </sequential>
         </parallel>
