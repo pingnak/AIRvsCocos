@@ -89,9 +89,11 @@ This will enable the debugger and document generator.
 		<attribute name="ios"/>		    <!-- Is IOS -->
 		<attribute name="android"/>		<!-- Is Android -->
 		<attribute name="air"/>		    <!-- Is AIR (PC) -->
+		<attribute name="mobile" default="true" />	<!-- Is mobile platform -->
 		<attribute name="buildtype"/>	<!-- airmobile -->
 		<sequential>
 			<tstamp />
+<echoproperties/>
 			<exec executable="${AIR.MXMLC}" failonerror="true" searchpath="true" >
                 <arg line="@{buildtype}" />
                 
@@ -108,7 +110,7 @@ This will enable the debugger and document generator.
                 <arg value="-compiler.define=CONFIG::DEBUG,@{debug}" /> 
                 <arg value="-compiler.define=CONFIG::RELEASE,@{release}" /> 
                 
-                <arg value="-compiler.define=CONFIG::MOBILE,true" />
+                <arg value="-compiler.define=CONFIG::MOBILE,@{mobile}" />
                 <arg value="-compiler.define=CONFIG::IOS,@{ios}" />
                 <arg value="-compiler.define=CONFIG::ANDROID,@{android}" />
                 <arg value="-compiler.define=CONFIG::AIR,@{air}" />
@@ -148,7 +150,7 @@ This will enable the debugger and document generator.
                 
                 <!-- Set up Application preferences -->
                 <arg line="-default-size ${app.width} ${app.height}" />
-                <arg line="-default-background-color=#${background.color}" />
+                <arg line="-default-background-color=#${app.background.color}" />
                 <arg line="-default-frame-rate=${app.framerate}" />
                 
                 <!-- MAIN (must be last on list -->
@@ -192,15 +194,7 @@ This will enable the debugger and document generator.
 				<!-- Tell adt where to find the .ane files. 
 				<arg line="-extdir '${library.path}'"/>
 				-->
-				<arg line="-C ${ios.deploy}"/>	<!-- Change folder -->
-				<arg line="${ios.swf}"/>
-				<arg line="AppIconsForPublish/icon2929.png"/>
-				<arg line="AppIconsForPublish/icon4848.png"/>
-				<arg line="AppIconsForPublish/icon5757.png"/> 
-				<arg line="AppIconsForPublish/icon7272.png"/>
-				<arg line="AppIconsForPublish/icon114114.png"/>
-				<arg line="AppIconsForPublish/icon512512.png"/>
-				<!-- Add other files/folders to list -->
+				<arg line="-C ${ios.deploy} ."/>	<!-- Change folder, add it all -->
 			</exec>
 		</sequential>
 	</target>
@@ -216,12 +210,37 @@ This will enable the debugger and document generator.
 			    adt -installApp -platform iOS -device 1 -package ./deploy/iOS/MonkeyPile_iOS.ipa
 			-->
 			<echo>Install...</echo>
+            <!-- 
+                https://github.com/libimobiledevice/ideviceinstaller
+            
+                You can install ideviceinstaller from Homebrew http://brew.sh
+                
+                The biggest obstacle for dependencies is xcode, but you already did that.
+                
+                Homebrew or MacPorts would have also installed 'ant' without any 
+                flaming hoops.  Similar to 'sudo apt-get ...', in a Debian Linux.
+    
+                You'll probably also want SoX, LAME, ImageMagick, pngquant, optipng, 
+                while you're installing things with that.  
+                
+                Anyways, launch to a real iThing, using ad-hoc mobileprovision.
+                
+                It will (and should) fail with a .ipa, signed for the app store.
+            -->
+            <exec executable="ideviceinstaller" failonerror="false" searchpath="true" >
+                <arg line="--uninstall ${app.id}" />
+            </exec>
+            <exec executable="ideviceinstaller" failonerror="false" searchpath="true" >
+                <arg line="--install ${ios.output}" />
+            </exec>
+			<!--
 			<exec executable="${AIR.ADT}" searchpath="true" vmlauncher="false" failonerror="true" >
 			    <arg line="-installApp"/>
 			    <arg line="-platform iOS"/>
 			    <arg line="-device  ${ios.device}"/>
 			    <arg line="-package ${ios.output}"/>
 			</exec>
+			-->
 		</sequential>
     </target>
 
@@ -259,14 +278,7 @@ This will enable the debugger and document generator.
 				<arg line="-storepass ${ios.cert.password}"/>
 				<arg line="${ios.output}"/>		<!-- Output file -->
 				<arg line="${ios.profile}"/>	    <!-- AIR project info -->
-				<arg line="-C ${ios.deploy}"/>	<!-- Change folder -->
-				<arg line="${ios.swf}"/>
-				<arg line="AppIconsForPublish/icon2929.png"/>
-				<arg line="AppIconsForPublish/icon4848.png"/>
-				<arg line="AppIconsForPublish/icon5757.png"/> 
-				<arg line="AppIconsForPublish/icon7272.png"/>
-				<arg line="AppIconsForPublish/icon114114.png"/>
-				<arg line="AppIconsForPublish/icon512512.png"/>
+				<arg line="-C ${ios.deploy} ."/>	<!-- Change folder, add it all -->
 				<!-- Add other files/folders to list -->
 			</exec>
 
@@ -327,12 +339,7 @@ This will enable the debugger and document generator.
 				<arg line="${android.profile}"/>	    <!-- AIR project info -->
 				<!-- Tell adt where to find the .ane files. -->
 				<arg line="-extdir '${library.path}'"/>
-				<arg line="-C ${android.deploy}"/>	<!-- Change folder -->
-				<arg line="${android.swf}"/>
-				<arg line="AppIconsForPublish/icon3636.png"/>
-				<arg line="AppIconsForPublish/icon4848.png"/>
-				<arg line="AppIconsForPublish/icon7272.png"/>
-				<!-- Add other files/folders to list -->
+				<arg line="-C ${android.deploy} ."/>	<!-- Change folder, add it all -->
 			</exec>
 		</sequential>
 	</target>
@@ -404,12 +411,7 @@ This will enable the debugger and document generator.
 				<arg line="-storepass ${android.cert.password}"/>
 				<arg line="${android.output}"/>		<!-- Output file -->
 				<arg line="${android.profile}"/>	    <!-- AIR project info -->
-				<arg line="-C ${android.deploy}"/>	<!-- Change folder -->
-				<arg line="${android.swf}"/>
-				<arg line="AppIconsForPublish/icon3636.png"/>
-				<arg line="AppIconsForPublish/icon4848.png"/>
-				<arg line="AppIconsForPublish/icon7272.png"/>
-				<!-- Add other files/folders to list -->
+				<arg line="-C ${android.deploy} ."/>	<!-- Change folder, add it all -->
 			</exec>
 			
 			<!-- http://help.adobe.com/en_US/air/build/WS901d38e593cd1bac1e63e3d128fc240122-7ffa.html 
@@ -462,19 +464,20 @@ This will enable the debugger and document generator.
 	<target name="air" description="Build AIR Deployable Target" depends="aircert" >
 		<sequential>
 		    <echo>AIR Release Build...</echo>
-			<macro-build target="${air.output.path}" debug="false" release="true" android="false" ios="false" air="true" buildtype="+configname=air" />
+			<macro-build target="${air.swf.path}" debug="false" release="true" android="false" ios="false" air="true" mobile="false" buildtype="+configname=air" />
 			<delete file="${air.output}" />
+
 			<echo>AIR Packaging...</echo>
 			<exec executable="${AIR.ADT}" searchpath="true" vmlauncher="false" failonerror="true" >
                 <arg line="-package"/>
                 <arg line="-storetype pkcs12"/>	<!-- Our certificate -->
-                <arg line="-storepass ${air.cert.password}"/>
                 <arg line="-keystore ${air.certificate}"/>
+                <arg line="-storepass ${air.cert.password}"/>
+                <arg line="-target air"/>
+                
                 <arg line="${air.output}"/>		<!-- Output file -->
                 <arg line="${air.profile}"/>	    <!-- AIR project info -->
-                <arg line="-C ${air.deploy}"/>	<!-- Change folder -->
-                <arg line="."/> 				<!-- Recursively add everything in deploy -->
-				<!-- Add other files/folders to list -->
+                <arg line="-C ${air.deploy} ."/>	<!-- Change folder, add it all -->
 			</exec>
 
 			<!--
@@ -488,11 +491,10 @@ This will enable the debugger and document generator.
                 <arg line="-storetype pkcs12"/>	<!-- Our certificate -->
                 <arg line="-storepass ${air.cert.password}"/>
                 <arg line="-keystore ${air.certificate}"/>
-                <arg line="-target bundle"/>		
-                <arg line="${air.output.app}"/>	<!-- Output file -->
+                <arg line="-target native"/>		
+                <arg line="${air.output.dmg}"/>	<!-- Output file -->
                 <arg line="${air.profile}"/>	    <!-- AIR project info -->
-                <arg line="-C ${air.deploy}"/>	<!-- Change folder -->
-                <arg line="."/> 				<!-- Recursively add everything in folder -->
+                <arg line="-C ${air.deploy} ."/>	<!-- Change folder, add it all -->
 			</exec>
 
 			<!-- Needs Windows, to build.  Make failure 'harmless' -->
@@ -501,11 +503,10 @@ This will enable the debugger and document generator.
                 <arg line="-storetype pkcs12"/>	<!-- Our certificate -->
                 <arg line="-storepass ${air.cert.password}"/>
                 <arg line="-keystore ${air.certificate}"/>
-                <arg line="-target bundle"/>		
+                <arg line="-target native"/>		
                 <arg line="${air.output.exe}"/>	<!-- Output file -->
                 <arg line="${air.profile}"/>	    <!-- AIR project info -->
-                <arg line="-C ${air.deploy}"/>	<!-- Change folder -->
-                <arg line="."/> 				<!-- Recursively add everything in folder -->
+                <arg line="-C ${air.deploy} ."/>	<!-- Change folder, add it all -->
 			</exec>
 	
 		</sequential>
@@ -513,11 +514,12 @@ This will enable the debugger and document generator.
 
 	<!--
 	    Run release mode AIR build
+	    No app located in directory /Users/pingnak/work/AIRvsCocos/Cocos/publish/Example.app
 	-->
     <target name="runair" description="Run AIR Target">
 		<sequential>
 		    <echo>AIR Release Build...</echo>
-			<macro-build target="${air.output.path}" debug="false" release="true" android="false" ios="false" air="true" buildtype="+configname=air" />
+			<macro-build target="${air.swf.path}" debug="false" release="true" android="false" ios="false" air="true" mobile="false" buildtype="+configname=air" />
 			<echo>Running in AIR...</echo>
 			<exec executable="${AIR.ADL}" searchpath="true" vmlauncher="false">
 			    <arg line="-profile desktop" />
@@ -540,7 +542,7 @@ This will enable the debugger and document generator.
 	<target name="debugair" description="Build and run air target in debugger" >
 		<sequential>
 		    <echo>AIR Debug Build...</echo>
-			<macro-build target="${air.output.path}" debug="true" release="false" android="false" ios="false" air="true" buildtype="+configname=air" />
+			<macro-build target="${air.swf.path}" debug="true" release="false" android="false" ios="false" air="true" mobile="false" buildtype="+configname=air" />
 
 		    <echo>You needed to run fdb in a shell, then type 'run', first...</echo>
 			
@@ -561,7 +563,7 @@ This will enable the debugger and document generator.
     <target name="traceair" description="Run debug AIR target outside of debugger" >
 		<sequential>
 		    <echo>AIR Debug Build...</echo>
-			<macro-build target="${air.output.path}" debug="true" release="false" android="false" ios="false" air="true" buildtype="+configname=air" />
+			<macro-build target="${air.swf.path}" debug="true" release="false" android="false" ios="false" air="true" mobile="false" buildtype="+configname=air" />
 
 			<echo>Running in AIR...</echo>
 			<exec executable="${AIR.ADL}" spawn="true" searchpath="true" vmlauncher="false">

@@ -6,6 +6,13 @@ var HelloWorldLayer = cc.Layer.extend({
         // 1. super init first
         this._super();
 
+/*
+		trace( "Derp %s", 'derp' );
+		assert(false);
+		throwassert( "More derp!" );
+CONFIG::FORDEBUG(cc.log("Derpatron!");)
+CONFIG::FORRELEASE(cc.log("Antiderp!");)
+*/
         /////////////////////////////
         // 2. add a menu item with "X" image, which is clicked to quit the program
         //    you may modify it.

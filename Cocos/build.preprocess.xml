@@ -1,0 +1,36 @@
+
+<!-- Build constants and macros injected/expanded into source code -->
+
+<replaceregex flags="g"
+    pattern="CONFIG::BUILD"     
+    replace="${DSTAMP}${TSTAMP}"/> <!-- Build timestamp -->
+<replaceregex flags="g"
+    pattern="CONFIG::PROJECTNAME"
+    replace="${app.title}"/>    <!-- Project name -->
+<replaceregex flags="g"
+    pattern="CONFIG::PACKAGE"   
+    replace="${app.id}"/>       <!-- com.whatever.Project -->
+<replaceregex flags="g"
+    pattern="CONFIG::BG"
+    replace="${app.background.color}"/> <!-- Background color -->
+<replaceregex flags="g"
+    pattern="CONFIG::FG"
+    replace="${app.foreground.color}"/> <!-- Foreground color -->
+<replaceregex flags="g"
+    pattern="CONFIG::WIDE"
+    replace="${app.width}"/>    <!-- Width of game window -->
+<replaceregex flags="g"
+    pattern="CONFIG::HIGH"      
+    replace="${app.height}"/>   <!-- Height of game window -->
+<replaceregex flags="g"
+    pattern="CONFIG::CX"        
+    replace="${app.CX}"/>       <!-- Center X of game window -->
+<replaceregex flags="g"
+    pattern="CONFIG::CY"        
+    replace="${app.CY}"/>       <!-- Center Y of game window -->
+<replaceregex flags="g"
+    pattern="${rxFunc}log${rxArg}" 
+    replace="\1cc.log(\2)"/> <!-- wrap my cc.log -->
+<replaceregex flags="g"
+    pattern="${rxFunc}logerror${rxArg}" 
+    replace="\1{ cc.error('ERROR:'); cc.log(\2); }"/> <!-- log error output  -->

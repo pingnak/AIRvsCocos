@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE project[<!ENTITY preprocess.common SYSTEM "build.preprocess.xml">]>
+
 <!--
     A build script wrapping cocos?  Am I insane?  Yes... but that's not the point.
     
@@ -15,7 +17,18 @@
     hides it from me, and I don't want to go digging into the bottomless rabbit
     hole, modifying things, when I just want to write a game.
 -->
-<project basedir="." name="${targetname}" default="web" >
+<project basedir="." name="Cocos Gauntlets Build" default="web" >
+
+    <!-- Helpers for regular expression preprocessor -->
+    <property name="rxFunc" value="(^|^[\t ]+)" />
+    <property name="rxConst" value="=(^|[\t (]+)" />
+    <property name="rxEatArgs" value="[ \t]*(\([^)]*\);)" />
+    <property name="rxParens" value="[ \t]*\([\t ]*(.*)[\t ]*\)" />
+    <property name="rxArg" value="[ \t]*\([\t ]*(.*)[\t ]*\);" />
+    <property name="rxFirstArg" value="[ \t]*\(([^,]*)," />
+    <property name="rxGetArg" value=",([^,]*)," />
+    <property name="rxLastArg" value=",([^)]*)\)" />
+    
 
     <!-- 
         This allow you to override certain, private settings with your own folder  
@@ -57,7 +70,7 @@
 			    <env key="NDK_ROOT" value="${NDK_ROOT}" />
 			    <env key="PATH" value="${ANDROID_SDK_ROOT}:${COCOS_FRAMEWORKS}:${COCOS_CONSOLE_ROOT}:${env.PATH}"/>
 
-                <arg line="${SHELL.c} 'cocos @{command}'" /> 
+                <arg line="${SHELL.c} 'cocos @{command}'" />
 
 			    <!-- Filter stderr, to point back at original source paths... -->
 				<redirector>
@@ -71,48 +84,156 @@
         </sequential>
 	</macrodef>
 
-	<macrodef name="macro-transfer">
-		<attribute name="debug"/>		<!-- Debug flag -->
-		<attribute name="release"/>		<!-- Complimentary Release flag -->
-		<!-- etc. -->
-
-	    <sequential>
-
-            <!-- Regular expressions used to parse macro-like insertions -->
-            <property name="rxFunc" value="(^|[\t ]+)" />
-            <property name="rxConst" value="=(^|[\t (]+)" />
-            <property name="rxEatArgs" value="[ \t]*(\([^)]*\);)" />
-            <property name="rxArg" value="[ \t]*\([\t ]*(.*)[\t ]*\);" />
-            <property name="rxFirstArg" value="[ \t]*\(([^,]*)," />
-            <property name="rxGetArg" value=",([^,]*)," />
-            <property name="rxLastArg" value=",([^)]*)\)" />
-            <!-- Transfer+translate source code, given those attributes -->
-            <copy todir="${targetname}/src" >
+	<macrodef name="macro-preprocess-debug">
+        <sequential>
+            <tstamp />
+            <copy todir="${targetname}/src" overwrite="true" >
                 <fileset dir="src">
-                    <include name="**/*.js" />
+                    <include name='**/*.js'/>
+                    <include name='**/*.json'/>
+                    <include name='**/*.html'/>
+                    <exclude name="main.js"/>
+                    <exclude name="project.json"/>
+                    <exclude name="index.html"/>
+                    <exclude name="index_windowed.html"/>
                 </fileset>
                 <filterchain>
-                <!-- Example filters
-					<replaceregex flags="g"
+
+                    <!--
+                        Dyke out function calls, rather than code...
+                    -->
+    					<replaceregex flags=""
+						pattern="${rxFunc}CONFIG::FORDEBUG${rxParens}"
+						replace="\2"/>  <!-- CONFIG::FORDEBUG(statement) -->
+
+    					<replaceregex flags=""
+						pattern="${rxFunc}CONFIG::FORRELEASE${rxParens}"
+						replace=""/>    <!-- CONFIG::FORRELEASE(statement) -->
+
+					<!-- 
+					    Debug statements MUST NOT be part of other statements, or
+					    have side-effects.
+					    
+					    Not a 'weakness' of my sloppy regular expressions.
+					    
+					    Since assert/throwassert/trace appear and disappear in 
+					    code, side-effects from them will make bugs.
+					    
+					    For instance 'assert( 0 > ++reference );' is invalid
+					    code that will cause a bug, like reference count never
+					    being incremented in release mode.
+					-->
+						
+                    <!-- Debug assertion -->
+    					<replaceregex flags=""
+						pattern="${rxFunc}assert${rxArg}"
+						replace="\1{ if( !(\2) ) { cc.error('Assertion Failed: \2'); debugger; } }"/>
+
+                    <!-- Debug breakpoint -->
+    					<replaceregex flags=""
+						pattern="${rxFunc}throwassert${rxArg}"
+						replace="\1{ cc.error('Assertion Thrown'); debugger; }"/>
+						
+                    <!-- Debug trace -->
+    					<replaceregex flags=""
 						pattern="${rxFunc}trace${rxArg}"
-						replace="\1{ cc.trace(\2); }"/>                
-					<replaceregex flags="g"
-						pattern="${rxFunc}trace${rxArg}"
-						replace="\1 /*trace(\2);*/"/>                
-                -->
-				</filterchain> 
+						replace="\1cc.log(\2);"/>
+
+					<!-- Default operations -->
+                    &preprocess.common;
+						
+                </filterchain>
             </copy>
-
-            <copy todir="${targetname}/res" >
-                <fileset dir="res">
-                    <!-- I was going to be picky, but the list got longer and longer... -->
-                    <include name="**/*" />
+            <copy todir="${targetname}" overwrite="true" >
+                <fileset dir="src">
+                    <include name="main.js"/>
+                    <include name="project.json"/>
+                    <include name="index.html"/>
+                    <include name="index_windowed.html"/>
                 </fileset>
-            </copy>            
-
-	    </sequential>
-    
+                <filterchain>
+                    &preprocess.common;
+                </filterchain>
+            </copy>
+            
+            <sequential>
+                <copy todir="${targetname}/res" >
+                    <fileset dir="res">
+                        <!-- I was going to be picky, but the list got longer and longer... -->
+                        <include name="**/*" />
+                    </fileset>
+                </copy>            
+            </sequential>
+            
+        </sequential>
 	</macrodef>
+	
+	<macrodef name="macro-preprocess-release">
+        <sequential>
+            <tstamp />
+            <copy todir="${targetname}/src" overwrite="true" >
+                <fileset dir="src">
+                    <include name='**/*.js'/>
+                    <include name='**/*.json'/>
+                    <include name='**/*.html'/>
+                    <exclude name="main.js"/>
+                    <exclude name="project.json"/>
+                    <exclude name="index.html"/>
+                    <exclude name="index_windowed.html"/>
+                </fileset>
+                <filterchain>
+
+    					<replaceregex flags=""
+						pattern="${rxFunc}CONFIG::FORRELEASE${rxParens}"
+						replace="\2"/>  <!-- CONFIG::FORRELEASE(statement) -->
+
+    					<replaceregex flags=""
+						pattern="${rxFunc}CONFIG::FORDEBUG${rxParens}"
+						replace=""/>    <!-- CONFIG::FORDEBUG(statement) -->
+						
+                    <!-- Debug assertion -->
+    					<replaceregex flags=""
+						pattern="${rxFunc}assert${rxArg}"
+						replace="\1//assert(\2);"/>
+
+                    <!-- Debug breakpoint -->
+    					<replaceregex flags=""
+						pattern="${rxFunc}throwassert${rxArg}"
+						replace="\1//throwassert();"/>
+						
+                    <!-- Debug trace -->
+    					<replaceregex flags=""
+						pattern="${rxFunc}trace${rxArg}"
+						replace="\1//trace(\2*);"/>
+						
+					<!-- Default operations -->
+                    &preprocess.common;
+                </filterchain>
+            </copy>
+            <copy todir="${targetname}" overwrite="true" >
+                <fileset dir="src">
+                    <include name="main.js"/>
+                    <include name="project.json"/>
+                    <include name="index.html"/>
+                    <include name="index_windowed.html"/>
+                </fileset>
+                <filterchain>
+                    &preprocess.common;
+                </filterchain>
+            </copy>
+            
+            <sequential>
+                <copy todir="${targetname}/res" >
+                    <fileset dir="res">
+                        <!-- I was going to be picky, but the list got longer and longer... -->
+                        <include name="**/*" />
+                    </fileset>
+                </copy>            
+            </sequential>
+            
+        </sequential>
+	</macrodef>
+	
 	
 	<!--
 	    Caution: This will be destructive to any existing changes that you were
@@ -164,9 +285,9 @@ ${targetname}
 
 <property name="android.certificate.absolute" location="${android.certificate}" />
 <echo file="${targetname}/frameworks/runtime-src/proj.android/ant.properties" append="true" >
-# Tack on keystore data, as cocos would have made you type it in.
+# Tack on keystore data, as cocos would have made you type it in. Very manually.
 # Note: This is stored in the clear, where it could find its way into version 
-# control, where it definitely should not be.
+# control, and other places where it definitely should not be.
 # You can put an Android app through the app store with your self-signed
 # certificate, but you shouldn't put it places where others might find it.
 key.store=${android.certificate.absolute}
@@ -305,22 +426,24 @@ key.alias.password=${android.certificate.alias.password}
         kinds of things, because Microsoft decided you weren't worthy.  Then you
         get to google for answers, until one of them 'fixes' it.
         
-        Try 'Reset IE', in the 'Advanced' settings tab.
-        
+        Try 'Reset IE', in the 'Advanced' settings tab.  Then google for more.
+
     -->    
     <target name="web" description="Make Web" depends="web.configure" >
-        <macro-transfer debug="false" release="true" />
-		<macro-cocos command="compile -p web -m release --advanced" />
+        <macro-preprocess-release />
+		<macro-cocos command="compile --quiet -p web -m release --advanced" />
+		<copy todir="${app.deploy}/web"><fileset dir="${targetname}/publish/html5"/></copy>
     </target>
 
-    <target name="runweb" description="Run Web" depends="web.configure" >
-        <macro-transfer debug="false" release="true" />
-		<macro-cocos command="run -p web -m release --advanced" />
+    <target name="runweb" description="run --quiet Web" depends="web.configure" >
+        <macro-preprocess-release />
+		<macro-cocos command="run --quiet -p web -m release --advanced" />
+		<copy todir="${app.deploy}/web"><fileset dir="${targetname}/publish/html5"/></copy>
     </target>
 
     <target name="debugweb" description="Debug Web" depends="web.configure" >
-        <macro-transfer debug="true" release="false" />
-		<macro-cocos command="run -p web -m debug" />
+        <macro-preprocess-debug />
+		<macro-cocos command="run --quiet -p web -m debug" />
     </target>
 
     <!-- Make an android certificate, if it doesn't exist -->
@@ -359,18 +482,20 @@ key.alias.password=${android.certificate.alias.password}
     </target>
 
     <target name="android" description="Make Android" depends="android.configure" >
-        <macro-transfer debug="false" release="true" />
-		<macro-cocos command="compile -p android -m release --ndk-mode release" /> 
+        <macro-preprocess-release />
+		<macro-cocos command="compile --quiet -p android -m release --ndk-mode release" /> 
+		<copy tofile="${app.deploy}/${targetname}.apk"><fileset file="${targetname}/publish/android/${targetname}-release-signed.apk"/></copy>
     </target>
     
-    <target name="runandroid" description="Run Android" depends="android.configure" >
-        <macro-transfer debug="false" release="true" />
-		<macro-cocos command="run -p android -m release --ndk-mode release" />
+    <target name="runandroid" description="run --quiet Android" depends="android.configure" >
+        <macro-preprocess-release />
+		<macro-cocos command="run --quiet -p android -m release --ndk-mode release" />
+		<copy tofile="${app.deploy}/${targetname}.apk"><fileset file="${targetname}/publish/android/${targetname}-release-signed.apk"/></copy>
     </target>
 
     <target name="debugandroid" description="Debug Android" depends="android.configure" >
-        <macro-transfer debug="true" release="false" />
-		<macro-cocos command="run -p android -m debug --ndk-mode debug" /> 
+        <macro-preprocess-debug />
+		<macro-cocos command="run --quiet -p android -m debug --ndk-mode debug" /> 
     </target>
     
 
@@ -398,13 +523,15 @@ key.alias.password=${android.certificate.alias.password}
     </target>
     
     <target name="ios" description="Make iOS" depends="ios.configure" if="is.osx" >
-        <macro-transfer debug="false" release="true" />
-		<macro-cocos command="compile -p ios -m release -t ${targetname} --sign-identity '${ios.sign}'" />
+        <macro-preprocess-release />
+		<macro-cocos command="compile --quiet -p ios -m release -t ${targetname} --sign-identity '${ios.sign}'" />
+		<copy todir="${app.deploy}"><fileset file="${targetname}/publish/ios/${targetname}.ipa"/></copy>
     </target>
 
-    <target name="runios"  description="Run iOS" depends="ios.configure" if="is.osx" >
-        <macro-transfer debug="false" release="true" />
-		<macro-cocos command="run -p ios -m release -t ${targetname} --sign-identity '${ios.sign}'" />
+    <target name="runios"  description="run --quiet iOS" depends="ios.configure" if="is.osx" >
+        <macro-preprocess-release />
+		<macro-cocos command="run --quiet -p ios -m release -t ${targetname} --sign-identity '${ios.sign}'" />
+		<copy todir="${app.deploy}"><fileset file="${targetname}/publish/ios/${targetname}.ipa"/></copy>
 		<!-- 
 		    https://github.com/libimobiledevice/ideviceinstaller
 		
@@ -422,17 +549,17 @@ key.alias.password=${android.certificate.alias.password}
 		    
 		    It will (and should) fail with a .ipa, signed for the app store.
 		-->
-        <exec executable="ideviceinstaller" dir="${targetname}/publish/ios" failonerror="false" searchpath="true" >
+        <exec executable="ideviceinstaller" dir="${app.deploy}/ios" failonerror="false" searchpath="true" >
             <arg line="--uninstall ${app.id}" />
         </exec>
-        <exec executable="ideviceinstaller" dir="${targetname}/publish/ios" failonerror="false" searchpath="true" >
+        <exec executable="ideviceinstaller" dir="${app.deploy}/ios" failonerror="false" searchpath="true" >
             <arg line="--install ${targetname}.ipa" />
         </exec>
     </target>
 
     <target name="debugios" description="Debug iOS" depends="ios.configure" if="is.osx" >
-        <macro-transfer debug="true" release="false" />
-		<macro-cocos command="run -p ios -m debug -t ${targetname} --sign-identity '${ios.sign}'" />
+        <macro-preprocess-debug />
+		<macro-cocos command="run --quiet -p ios -m debug -t ${targetname} --sign-identity '${ios.sign}'" />
     </target>
     
     <target name="osx.configure" if="is.osx" >
@@ -451,18 +578,20 @@ key.alias.password=${android.certificate.alias.password}
     </target>
 
     <target name="mac" description="Make OS X" depends="osx.configure" if="is.osx" >
-        <macro-transfer debug="false" release="true" />
-		<macro-cocos command="compile -p mac -m release" />
+        <macro-preprocess-release />
+		<macro-cocos command="compile --quiet -p mac -m release" />
+		<copy todir="${app.deploy}/${targetname}.app"><fileset dir="${targetname}/publish/mac/${targetname} Mac.app"/></copy>
     </target>
 
-    <target name="runmac" description="Run OS X" depends="osx.configure" if="is.osx" >
-        <macro-transfer debug="false" release="true" />
-		<macro-cocos command="run -p mac -m release" />
+    <target name="runmac" description="run --quiet OS X" depends="osx.configure" if="is.osx" >
+        <macro-preprocess-release />
+		<macro-cocos command="run --quiet -p mac -m release" />
+		<copy todir="${app.deploy}/${targetname}.app"><fileset dir="${targetname}/publish/mac/${targetname} Mac.app"/></copy>
     </target>
 
     <target name="debugmac" description="Debug OS X" depends="osx.configure" if="is.osx" >
-        <macro-transfer debug="true" release="false" />
-		<macro-cocos command="run -p mac -m debug" />
+        <macro-preprocess-debug />
+		<macro-cocos command="run --quiet -p mac -m debug" />
     </target>
 
     <!-- Note: You need Linux to do Linux -->
@@ -489,18 +618,18 @@ key.alias.password=${android.certificate.alias.password}
 
     <!-- Linux needs to be a Debian child -->
     <target name="linux" description="Make Linux" depends="linux.configure" if="is.linux" >
-        <macro-transfer debug="false" release="true" />
-		<macro-cocos command="compile -p win32 -m release" />
+        <macro-preprocess-release />
+		<macro-cocos command="compile --quiet -p win32 -m release" />
     </target>
 
-    <target name="runlinux" description="Run Linux" depends="linux.configure" if="is.linux" >
-        <macro-transfer debug="false" release="true" />
-		<macro-cocos command="run -p win32 -m release" />
+    <target name="runlinux" description="run --quiet Linux" depends="linux.configure" if="is.linux" >
+        <macro-preprocess-release />
+		<macro-cocos command="run --quiet -p win32 -m release" />
     </target>
 	
     <target name="debuglinux" description="Debug Linux" depends="linux.configure" if="is.linux" >
-        <macro-transfer debug="true" release="false" />
-		<macro-cocos command="run -p win32 -m debug" />
+        <macro-preprocess-debug />
+		<macro-cocos command="run --quiet -p win32 -m debug" />
     </target>
     
     <!-- Note: You need Windows and Visual Studio to build a Windows target -->
@@ -524,18 +653,18 @@ key.alias.password=${android.certificate.alias.password}
     </target>
 
     <target name="win32" description="Make Windows" depends="windows.configure" if="is.windows" >
-        <macro-transfer debug="false" release="true" />
-		<macro-cocos command="compile -p win32 -m release" />
+        <macro-preprocess-release />
+		<macro-cocos command="compile --quiet -p win32 -m release" />
     </target>
 
-    <target name="runwin32" description="Run Android" depends="windows.configure" if="is.windows" >
-        <macro-transfer debug="false" release="true" />
-		<macro-cocos command="run -p win32 -m release" />
+    <target name="runwin32" description="run --quiet Android" depends="windows.configure" if="is.windows" >
+        <macro-preprocess-release />
+		<macro-cocos command="run --quiet -p win32 -m release" />
     </target>
     
     <target name="debugwin32" description="Debug Windows" depends="windows.configure" if="is.windows" >
-        <macro-transfer debug="true" release="false" />
-		<macro-cocos command="run -p win32 -m debug" />
+        <macro-preprocess-debug />
+		<macro-cocos command="run --quiet -p win32 -m debug" />
     </target>
 
     <target name="win8.1.configure" if="is.windows" >
@@ -552,18 +681,18 @@ key.alias.password=${android.certificate.alias.password}
     </target>
 
     <target name="win8.1" description="Make Win8.1" depends="win8.1.configure" if="is.windows" >
-        <macro-transfer debug="false" release="true" />
-		<macro-cocos command="compile -p win8.1 -m release" />
+        <macro-preprocess-release />
+		<macro-cocos command="compile --quiet -p win8.1 -m release" />
     </target>
 
-    <target name="runwin8.1" description="Run Android" depends="win8.1.configure" if="is.windows" >
-        <macro-transfer debug="false" release="true" />
-		<macro-cocos command="run -p win8.1 -m release" />
+    <target name="runwin8.1" description="run --quiet Android" depends="win8.1.configure" if="is.windows" >
+        <macro-preprocess-release />
+		<macro-cocos command="run --quiet -p win8.1 -m release" />
     </target>
     
     <target name="debugwin8.1" description="Debug Win8.1" depends="win8.1.configure" if="is.windows" >
-        <macro-transfer debug="true" release="false" />
-		<macro-cocos command="run -p win8.1 -m debug" />
+        <macro-preprocess-debug />
+		<macro-cocos command="run --quiet -p win8.1 -m debug" />
     </target>
     
     <target name="wp8.configure" if="is.windows" >
@@ -580,18 +709,18 @@ key.alias.password=${android.certificate.alias.password}
     </target>
 
     <target name="wp8" description="Make Wp8" depends="wp8.configure" if="is.windows" >
-        <macro-transfer debug="false" release="true" />
-		<macro-cocos command="compile -p wp8 -m release" />
+        <macro-preprocess-release />
+		<macro-cocos command="compile --quiet -p wp8 -m release" />
     </target>
 
-    <target name="runwp8" description="Run Android" depends="wp8.configure" if="is.windows" >
-        <macro-transfer debug="false" release="true" />
-		<macro-cocos command="run -p wp8 -m release" />
+    <target name="runwp8" description="run --quiet Android" depends="wp8.configure" if="is.windows" >
+        <macro-preprocess-release />
+		<macro-cocos command="run --quiet -p wp8 -m release" />
     </target>
     
     <target name="debugwp8" description="Debug Wp8" depends="wp8.configure" if="is.windows" >
-        <macro-transfer debug="true" release="false" />
-		<macro-cocos command="run -p wp8 -m debug" />
+        <macro-preprocess-debug />
+		<macro-cocos command="run --quiet -p wp8 -m debug" />
     </target>
 
     

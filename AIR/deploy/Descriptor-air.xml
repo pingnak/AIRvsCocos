@@ -48,4 +48,5 @@
         <image48x48>AppIconsForPublish/icon4848.png</image48x48>
         <image128x128>AppIconsForPublish/icon128128.png</image128x128> 
     </icon>
+    <supportedProfiles>desktop extendedDesktop</supportedProfiles>
 </application>

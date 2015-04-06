@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>CONFIG::PROJECTNAME</title>
+    <link rel="icon" type="image/GIF" href="res/favicon.ico"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="full-screen" content="yes"/>
+    <meta name="screen-orientation" content="portrait"/>
+    <meta name="x5-fullscreen" content="true"/>
+    <meta name="360-fullscreen" content="true"/>
+    <style>
+        body, canvas, div {
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            -khtml-user-select: none;
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+            color:#CONFIG::FG;
+        }
+        /* Force game box to fixed size, to integrate into web page */
+        #gameBox { 
+            position:absolute;
+            /* Clip it to box. */
+            overflow:hidden;
+            /* Width+Height can be changed, and game will size to fit. */
+            width:  CONFIG::WIDEpx; 
+            height: CONFIG::HIGHpx;
+            /* Set margin to half width, to center properly. */
+            margin: 0px -CONFIG::CXpx;
+            left:   50%;
+        }
+    </style>
+</head>
+<body style="padding:0; margin:0; background:#CONFIG::BG;">
+<script src="res/loading.js"></script>
+
+<h1>Fixed Size Game, Clipped To Web Layout</h1>
+<p>Build: CONFIG::BUILD</p>
+<p>Project: CONFIG::PROJECTNAME</p>
+<p>Package: CONFIG::PACKAGE</p>
+<p>This is the game centered, as web page content.  If you move canvas to the top
+level of the body content, it will attempt to fill the screen, and surrounding
+it with other content, like banner ads or site information will not be possible.</p>
+<p>Cocos2D doesn't clip as it should (panning screen 'overflows' game box).  The 
+clipping in this case is done by CSS.</p>
+<p>This mode is friendly to integration with existing site layouts, or surrounding 
+your game with links, ads, etc. on desktop browsers.  The game can be any size,
+but preserve the square (or at least 'portrait') aspect ratio.  It should fit 
+down to 2:1, height:width.  Obviously it probably won't work down to 'banana phone'
+aspects.</p>
+<div id="gameBox">
+    <canvas id="gameCanvas" width="CONFIG::WIDE" height="CONFIG::HIGH"></canvas>
+</div>
+
+<script src="frameworks/cocos2d-html5/CCBoot.js"></script>
+<script cocos src="main.js"></script>
+</body>
+</html>
