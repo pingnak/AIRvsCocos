@@ -46,12 +46,6 @@
                 'System Monitor' or 'Performance Monitor' or other names, for Linux
 		-->
         <parallel threadCount="2">
-            <sequential>
-                <get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
-                    <url url="${ant.contrib.url}"/>
-                </get>
-                <unzip src="${depends}/${ant.contrib.filename}" dest="${depends}" />
-            </sequential>
 
             <sequential>
                 <get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
@@ -187,13 +181,6 @@ GNU.TAIL=tail
         -->
 
         <parallel threadCount="2">
-
-            <sequential>
-                <get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
-                    <url url="${ant.contrib.url}"/>
-                </get>
-                <unzip src="${depends}/${ant.contrib.filename}" dest="${depends}" />
-            </sequential>
         
             <sequential>
                 <get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
@@ -327,12 +314,6 @@ GNU.TAIL=tail
         -->
        
         <parallel threadCount="2">
-        <sequential>
-            <get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
-                <url url="${ant.contrib.url}"/>
-            </get>
-            <unzip src="${depends}/${ant.contrib.filename}" dest="${depends}" />
-        </sequential>
         <sequential>
             
             <get dest="${depends}" skipexisting="true" ignoreerrors="false" >

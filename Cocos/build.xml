@@ -408,6 +408,10 @@ key.alias.password=${android.certificate.alias.password}
                 <include name="**/*.gif" />
             </fileset>
         </copy>
+    
+        <!-- Make the deployment folder -->
+        <mkdir dir="${app.deploy}"/>
+
     </target>
 
     <target name="web.configure" depends="getPathWindows,getPathStandard" >
