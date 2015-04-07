@@ -93,6 +93,7 @@ This will enable the debugger and document generator.
 		<attribute name="buildtype"/>	<!-- airmobile -->
 		<sequential>
 			<tstamp />
+			<mkdir dir="${app.publish}" />
 			<exec executable="${AIR.MXMLC}" failonerror="true" searchpath="true" >
                 <arg line="@{buildtype}" />
                 
