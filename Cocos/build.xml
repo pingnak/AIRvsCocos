@@ -18,7 +18,14 @@
     hole, modifying things, when I just want to write a game.
 -->
 <project basedir="." name="Cocos Gauntlets Build" default="web" >
-	<property name="xxbuild.quiet" value="--quiet" />
+	<property name="dashdash" value="--" />
+	<!-- 
+	    This turned out to be incompatible with builds under Windows... 
+	    
+	    If you're not building under windows, then this makes the Cocos2D output
+	    a lot less spammy.
+    <property name="build.quiet" value="${dashdash}quiet" />
+	-->
 	<property name="build.quiet" value="" />
 
 
