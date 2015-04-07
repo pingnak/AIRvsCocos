@@ -47,15 +47,11 @@ or 'fix' an archive, if you interrupt it.  So you'll have to clean out any
 intermediate, half baked stuff in the depends folder, if you stop it, or your
 web connection gets dropped.
 
-The setup script will generate an 'environment' script to run once, from your
-shell, whenever you start to work on a project. While I *could* modify the
-computer's environment with all of this, you are as likely to have many projects
-in different states of development/support as I am. So you might want to keep
-all of these versions of SDK separate, and archived separately, so you can
-consistently go back into a project and make bug fixes or add features, later
-on. In Windows, you can right-click on a batch file, and make a 'shortcut',
-where you can configure the window size/color/font/etc. for building. Many IDEs
-and programmer's editors accomodate this pattern, as well.
+The setup script will generate a configuration for ANT, and a 'configure' 
+script, to run from your shell.  The script is just there to be 'handy'.  Use
+'source configure.sh', to load that configuration into BASH, or the like, or
+invoke 'cnfigure.bat', for Windows CMD shell.  You don't need to do anything 
+with it, to use the ant build.xml in either subdirectory.
 
 At the end of the script, it will  launch the 'android' tool, to pick out other 
 bits of the Android SDK, for the Cocos2D side of things, and review what you got, 
@@ -64,6 +60,20 @@ by default.  For instance, you need Android 5.0 SDK, or later, to support
 version compatible with an iPad.  The Cocos2d project has earlier iOS and Android 
 SDK targets configured, and the respective app stores will bounce it as soon as 
 you try to submit.
+
+To play in the AIR folder, you're done, other than the certificate fun for iOS.
+The AIR and Android .p12 files will be auto-generated.
+
+In the Cocos folder, invoke 'ant init'.  This will create the Cocos2d project.  
+Like the AIR version, the Android .p12 file will be auto-generated, if you
+don't provide them.
+
+Be sure to exclude that folder from your version control.  It has a couple of
+leftover settings for iOS, but everything else will be generated.
+
+If that Cocos2d project melts down, you can always delete that folder, and run 
+'ant init' on it, again.  That is part of the reason why it's structured that 
+way.  
 
 ## External Setup
 
@@ -83,24 +93,32 @@ can pick over the bits and pieces you needed.
 
 On the Windows side of things, Cocos2D requires Visual Studio 2012, or later.  
 
+## Platform Requirements
+
+For Cocos2D, Windows type builds need Windows OS.  Mac/iOS builds need to run
+in OS X.  Web or Android will work on either.
+
+For AIR, you can generate AIR, Android or iOS files in Mac/Windows, but to make
+the 'native installer' AIR application, Windows for Windows, Mac for Mac.
+
 ## The Sad Story of Linux + AIR
 
 There isn't one.  At least, not an up-to-date one, with straight-forward 
 installation rules.  So I'm setting that aside, and making sure Cocos2D-js
-works.
+works, instead.
 
 ## Version Control
 
 There are folders you shouldn't add to version control. For instance, the
 'depends' folder, that 'setup' creates. Once it has extracted the archives,
-there are literally over 60,000 little files and binaries in them. If you wish
-to preserve the archives (since it's likely in the future that you might not be 
-able to download them again), be selective of what you add to version control, 
-and 'exclude' the extracted folders.  They can be re-extracted, without forcing
-everyone to download that mountain of fecal matter from version controlm again.  
-Doing it *like this* (not necessarily *exactly like this*), means you'll have the 
-'right' versions of everything, later on, when you need to fix or change 
-something.
+there are literally over 100,000 little files and binaries in them. If you wish
+to preserve the archives (since it's likely in the future that you might not be
+able to download them again), back them up separately. Be selective of what you
+add to version control, and 'exclude' the extracted folders. They can be
+re-extracted, without forcing everyone to download that mountain of fecal matter
+from version controlm again. Doing it *like this* (not necessarily *exactly like
+this*), means you'll have the 'right' versions of everything, later on, when you
+need to fix or change something.
 
 The folder tree that happens after you invoke 'cocos new' is also full of crap
 that you don't want in version control. Part of the reason I made these scripts

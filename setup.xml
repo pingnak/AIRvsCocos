@@ -17,7 +17,6 @@
 	<!-- Import settings -->
     <property file="setup.properties"/>
 
-
     <!-- Debugging...
 	<echoproperties/>
    	-->
@@ -34,7 +33,18 @@
 
             Note: In Windowsland, all files are 'executable', so ant/JAVA 
             has no problem with permissions.
-        -->
+
+            Ant's 'progress' option for downloads is useless.  It just fills
+            the screen with dots... and then tells you nothing.
+            
+            So, to see if it's actually downloading or downloafing... 
+            
+                'Task Manager' or 'Resource Monitor' for Windows
+                
+                'Activity Monitor' for OS X
+                
+                'System Monitor' or 'Performance Monitor' or other names, for Linux
+		-->
         <parallel threadCount="2">
             <sequential>
                 <get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
@@ -42,16 +52,18 @@
                 </get>
                 <unzip src="${depends}/${ant.contrib.filename}" dest="${depends}" />
             </sequential>
+
             <sequential>
                 <get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
                     <url url="${windows.python.url}"/>
                 </get>
-                <!-- Launch interactive Python installer -->
-                <exec executable="msiexec" dir="${depends}" spawn="true" searchpath="true" >
-                    <arg line="/I ${windows.python.filename}" />
+                <!-- Launch Python installer -->
+                <exec executable="msiexec" searchpath="true"   >
+                    <arg line="/I '${basedir}\${depends}\${windows.python.filename}' TARGETDIR='${basedir}\${depends}\${windows.python.unpacked}' /qb" />
                 </exec>
                 <echo>${windows.python.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
             </sequential>
+
             <sequential>
                 <get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
                     <url url="${windows.AIRSDK.url}"/>
@@ -70,7 +82,6 @@
                 <get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
                     <url url="${windows.androidndk.url}"/>
                 </get>
-                <!-- Evil, self-extracting executable for ndk -->
                 <exec executable="cmd" dir="${depends}" failonerror="true" searchpath="true" >
                     <arg line="/c ${windows.androidndk.filename} -y" />
                 </exec>
@@ -83,7 +94,8 @@
                 <unzip src="${depends}/${windows.androidsdk.filename}" dest="${depends}" />
                 <echo>${windows.androidsdk.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
             </sequential>
-        </parallel>
+
+		</parallel>
         
         <echo>Invoke ${configure.bat} to set up build environments.</echo>
     </target>
@@ -94,8 +106,8 @@
 
 <echo file="${configure.bat}" append="false">@echo off
 REM Set up build environment.
-set ANT_ROOT=${ant.home}
-REM set Path=%ANT_ROOT%\bin;%Path%
+set ANT_ROOT=${ant.home}\bin
+REM set Path=%ANT_ROOT%;%Path%
 set AIR_ROOT=${basedir}\${depends}\${windows.AIRSDK.unpacked}
 set Path=%AIR_ROOT%\bin;%Path%
 set COCOS_CONSOLE_ROOT=${basedir}\${depends}\${cocos2d.unpacked}\tools\cocos2d-console\bin
@@ -105,6 +117,9 @@ set Path=%COCOS_FRAMEWORKS%;%Path%
 set ANDROID_SDK_ROOT=${basedir}\${depends}\${windows.androidsdk.unpacked}
 set Path=%ANDROID_SDK_ROOT%/tools;%ANDROID_SDK_ROOT%/platform-tools;%Path%
 set NDK_ROOT=${basedir}\${depends}\${windows.androidndk.unpacked}
+set PYTHON_PATH=${basedir}\${depends}\${windows.python.unpacked}
+set Path=%PYTHON_PATH%;%Path%
+
 </echo>
 <path id="ant.home.DOS">
     <pathelement path="${ant.home}" />
@@ -118,9 +133,12 @@ set NDK_ROOT=${basedir}\${depends}\${windows.androidndk.unpacked}
 <property name="basedir.depends" location="${depends}" relative="false" />
 <echo file="${configure.properties}" append="false">#!/bin/sh
 # Ant configuration properties for Cocos2d-js
-ANT_ROOT=${ant.home.unix}
+ANT_ROOT=${ant.home.unix}/bin
+
+PYTHON_ROOT=${basedir.depends.unix}/${windows.python.unpacked}
 
 COCOS_CONSOLE_ROOT=${basedir.depends.unix}/${cocos2d.unpacked}/tools/cocos2d-console/bin
+
 COCOS_FRAMEWORKS=${basedir.depends.unix}/${cocos2d.unpacked}/frameworks
 
 NDK_ROOT=${basedir.depends.unix}/${windows.androidndk.unpacked}
@@ -257,6 +275,7 @@ export NDK_ROOT=${basedir}/${depends}/${osx.androidndk.unpacked}
 <echo file="${configure.properties}" append="false">#!/bin/sh
 # Ant configuration properties for Cocos2d-js
 ANT_ROOT=${ANT_ROOT}
+PYTHON_ROOT=
 
 COCOS_CONSOLE_ROOT=${basedir}/${depends}/${cocos2d.unpacked}/tools/cocos2d-console/bin
 COCOS_FRAMEWORKS=${basedir}/${depends}/${cocos2d.unpacked}/frameworks
@@ -390,6 +409,7 @@ export ANDROID_SDK_ROOT=${basedir}/${depends}/${linux.androidsdk.unpacked}
 SHELL=sh
 SHELL.c=-c
 ANT_ROOT=${ANT_ROOT}
+PYTHON_ROOT=
 
 COCOS_CONSOLE_ROOT=${basedir}/${depends}/${cocos2d.unpacked}/tools/cocos2d-console/bin
 COCOS_FRAMEWORKS=${basedir}/${depends}/${cocos2d.unpacked}/frameworks
