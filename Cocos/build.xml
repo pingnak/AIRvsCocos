@@ -646,6 +646,7 @@ key.alias.password=${android.certificate.alias.password}
         <echo>Updating Linux resources...</echo>
 
         <!-- Update Linux icons/artwork (only if newer) -->
+        <mkdir dir="myframeworks/linux/res" />
         <copy todir="${targetname}/frameworks/runtime-src/proj.linux" >
             <fileset dir="myframeworks/linux/res">
                 <include name="**/*.png" />
@@ -659,17 +660,17 @@ key.alias.password=${android.certificate.alias.password}
     <!-- Linux needs to be a Debian child -->
     <target name="linux" description="Make Linux" depends="linux.configure" if="is.linux" >
         <macro-preprocess-release />
-		<macro-cocos command="compile ${build.quiet} -p win32 -m release" />
+		<macro-cocos command="compile ${build.quiet} -p linux -m release" />
     </target>
 
     <target name="runlinux" description="run ${build.quiet} Linux" depends="linux.configure" if="is.linux" >
         <macro-preprocess-release />
-		<macro-cocos command="run ${build.quiet} -p win32 -m release" />
+		<macro-cocos command="run ${build.quiet} -p linux -m release" />
     </target>
 	
     <target name="debuglinux" description="Debug Linux" depends="linux.configure" if="is.linux" >
         <macro-preprocess-debug />
-		<macro-cocos command="run ${build.quiet} -p win32 -m debug" />
+		<macro-cocos command="run ${build.quiet} -p linux -m debug" />
     </target>
     
     <!-- Note: You need Windows and Visual Studio to build a Windows target -->

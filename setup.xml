@@ -353,6 +353,7 @@ GNU.TAIL=tail
             <echo>${linux.androidndk.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
 
         </sequential>
+
         </parallel>
 
 
@@ -403,13 +404,25 @@ android.adb=${ANDROID_SDK_ROOT}/platform-tools/adb
 android.monitor=${ANDROID_SDK_ROOT}/platform-tools/monitor
 </echo>
 
-<!-- Launch android manager, to download more -->
-<echo>Finish configuring Android SDK.</echo>
-<exec executable="${basedir}/${depends}/${linux.androidsdk.unpacked}/tools/android" spawn="true" />
-<exec executable="${basedir}/${depends}/${linux.androidsdk.unpacked}/tools/android" spawn="true">
-    <arg line="avd" />
-</exec>
-        </sequential>
+   
+    <!-- Install some more build necessities with apt-get.  Needs root -->
+    <exec executable="sh" dir="${depends}/${cocos2d.unpacked}/build" failonerror="true"  >
+        <arg line="-c 'sudo ./install-deps-linux.sh'" />
+    </exec>
+    <!--
+    <exec executable="sh" dir="${depends}/${cocos2d.unpacked}/tools/travis-scripts" failonerror="true"  >
+        <arg line="-c './install-glfw.sh'" />
+    </exec>
+    -->
+
+    <!-- Launch android manager, to download more -->
+    <echo>Finish configuring Android SDK.</echo>
+    <exec executable="${basedir}/${depends}/${linux.androidsdk.unpacked}/tools/android" spawn="true" />
+    <exec executable="${basedir}/${depends}/${linux.androidsdk.unpacked}/tools/android" spawn="true">
+        <arg line="avd" />
+    </exec>
+
+    </sequential>
     </target>
     
     <!--
