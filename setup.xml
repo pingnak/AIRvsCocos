@@ -125,7 +125,7 @@ set Path=%PYTHON_PATH%;%Path%
 <pathconvert targetos="unix" property="basedir.depends.unix" refid="basedir.depends"/>
 
 <property name="basedir.depends" location="${depends}" relative="false" />
-<echo file="${configure.properties}" append="false">#!/bin/sh
+<echo file="${configure.properties}" append="false">
 # Ant configuration properties for Cocos2d-js
 ANT_ROOT=${ant.home.unix}/bin
 
@@ -259,7 +259,7 @@ export NDK_ROOT=${basedir}/${depends}/${osx.androidndk.unpacked}
 <exec executable="sh" failonerror="true" searchPATH="true" >
     <arg line="-c 'chmod +x ${configure.sh}'" />
 </exec>
-<echo file="${configure.properties}" append="false">#!/bin/sh
+<echo file="${configure.properties}" append="false">
 # Ant configuration properties for Cocos2d-js
 ANT_ROOT=${ANT_ROOT}
 PYTHON_ROOT=
@@ -385,7 +385,7 @@ export ANDROID_SDK_ROOT=${basedir}/${depends}/${linux.androidsdk.unpacked}
 <exec executable="sh" failonerror="true" searchPATH="true" >
     <arg line="-c 'chmod +x ${configure.sh}'" />
 </exec>
-<echo file="${configure.properties}" append="false">#!/bin/sh
+<echo file="${configure.properties}" append="false">
 # Ant properties
 SHELL=sh
 SHELL.c=-c
@@ -401,15 +401,14 @@ android.android=${ANDROID_SDK_ROOT}/tools/android
 android.emulator=${ANDROID_SDK_ROOT}/tools/emulator
 android.adb=${ANDROID_SDK_ROOT}/platform-tools/adb
 android.monitor=${ANDROID_SDK_ROOT}/platform-tools/monitor
+</echo>
 
 <!-- Launch android manager, to download more -->
 <echo>Finish configuring Android SDK.</echo>
 <exec executable="${basedir}/${depends}/${linux.androidsdk.unpacked}/tools/android" spawn="true" />
-<exec executable="${basedir}/${depends}/${osx.androidsdk.unpacked}/tools/android" spawn="true">
+<exec executable="${basedir}/${depends}/${linux.androidsdk.unpacked}/tools/android" spawn="true">
     <arg line="avd" />
 </exec>
-
-</echo>
         </sequential>
     </target>
     
