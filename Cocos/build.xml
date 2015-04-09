@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE project[<!ENTITY preprocess.common SYSTEM "build.preprocess.xml">]>
+<!DOCTYPE project[
+    <!ENTITY preprocess.common  SYSTEM "build.preprocess.xml">
+    <!ENTITY preprocess.debug   SYSTEM "build.debug.xml">
+    <!ENTITY preprocess.release SYSTEM "build.release.xml">
+]>
 
 <!--
     A build script wrapping cocos?  Am I insane?  Yes... but that's not the point.
@@ -135,50 +139,7 @@
                     <exclude name="index_windowed.html"/>
                 </fileset>
                 <filterchain>
-
-                    <!--
-                        Dyke out function calls, rather than code...
-                    -->
-    					<replaceregex flags=""
-						pattern="${rxFunc}CONFIG::FORDEBUG${rxParens}"
-						replace="\2"/>  <!-- CONFIG::FORDEBUG(statement) -->
-
-    					<replaceregex flags=""
-						pattern="${rxFunc}CONFIG::FORRELEASE${rxParens}"
-						replace=""/>    <!-- CONFIG::FORRELEASE(statement) -->
-
-					<!-- 
-					    Debug statements MUST NOT be part of other statements, or
-					    have side-effects.
-					    
-					    Not a 'weakness' of my sloppy regular expressions.
-					    
-					    Since assert/throwassert/trace appear and disappear in 
-					    code, side-effects from them will make bugs.
-					    
-					    For instance 'assert( 0 > ++reference );' is invalid
-					    code that will cause a bug, like reference count never
-					    being incremented in release mode.
-					-->
-						
-                    <!-- Debug assertion -->
-    					<replaceregex flags=""
-						pattern="${rxFunc}assert${rxArg}"
-						replace="\1{ if( !(\2) ) { cc.error('Assertion Failed: \2'); debugger; } }"/>
-
-                    <!-- Debug breakpoint -->
-    					<replaceregex flags=""
-						pattern="${rxFunc}throwassert${rxArg}"
-						replace="\1{ cc.error('Assertion Thrown'); debugger; }"/>
-						
-                    <!-- Debug trace -->
-    					<replaceregex flags=""
-						pattern="${rxFunc}trace${rxArg}"
-						replace="\1cc.log(\2);"/>
-
-					<!-- Default operations -->
-                    &preprocess.common;
-						
+                    &preprocess.debug;
                 </filterchain>
             </copy>
             <copy todir="${targetname}" overwrite="true" >
@@ -189,7 +150,7 @@
                     <include name="index_windowed.html"/>
                 </fileset>
                 <filterchain>
-                    &preprocess.common;
+                    &preprocess.debug;
                 </filterchain>
             </copy>
             
@@ -219,32 +180,7 @@
                     <exclude name="index_windowed.html"/>
                 </fileset>
                 <filterchain>
-
-    					<replaceregex flags=""
-						pattern="${rxFunc}CONFIG::FORRELEASE${rxParens}"
-						replace="\2"/>  <!-- CONFIG::FORRELEASE(statement) -->
-
-    					<replaceregex flags=""
-						pattern="${rxFunc}CONFIG::FORDEBUG${rxParens}"
-						replace=""/>    <!-- CONFIG::FORDEBUG(statement) -->
-						
-                    <!-- Debug assertion -->
-    					<replaceregex flags=""
-						pattern="${rxFunc}assert${rxArg}"
-						replace="\1//assert(\2);"/>
-
-                    <!-- Debug breakpoint -->
-    					<replaceregex flags=""
-						pattern="${rxFunc}throwassert${rxArg}"
-						replace="\1//throwassert();"/>
-						
-                    <!-- Debug trace -->
-    					<replaceregex flags=""
-						pattern="${rxFunc}trace${rxArg}"
-						replace="\1//trace(\2*);"/>
-						
-					<!-- Default operations -->
-                    &preprocess.common;
+                    &preprocess.release;
                 </filterchain>
             </copy>
             <copy todir="${targetname}" overwrite="true" >
@@ -255,7 +191,7 @@
                     <include name="index_windowed.html"/>
                 </fileset>
                 <filterchain>
-                    &preprocess.common;
+                    &preprocess.release;
                 </filterchain>
             </copy>
             

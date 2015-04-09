@@ -1,0 +1,43 @@
+
+<!-- Release build preprocessing stage -->
+
+<replaceregex flags=""
+    pattern="${rxFunc}CONFIG::FORRELEASE${rxParens}"
+    replace="\2"/>  <!-- CONFIG::FORRELEASE(statement) -->
+
+<replaceregex flags=""
+    pattern="${rxFunc}CONFIG::FORDEBUG${rxParens}"
+    replace=""/>    <!-- CONFIG::FORDEBUG(statement) -->
+
+<replaceregex flags=""
+    pattern="${rxFunc}CONFIG::DEBUGELSE${rxFirstArg}${rxLastArg}"
+    replace="\3"/>    <!-- CONFIG::DEBUGELSE(debug,release) -->
+
+<replaceregex flags=""
+    pattern="${rxFunc}CONFIG::RELEASEELSE${rxFirstArg}${rxLastArg}"
+    replace="\2"/>    <!-- CONFIG::DEBUGELSE(release,debug) -->
+
+<!-- These two multiline conditional code blocks will spoil line counts -->
+<replaceregex flags="gis" byline="false"
+    pattern="CONFIG::RELEASE*(.+?)CONFIG::ENDRELEASE" 
+    replace="\1"/>  <!-- Code block for release (ignores contained comments) -->
+
+<replaceregex flags="gis" byline="false"
+    pattern="CONFIG::DEBUG*(.+?)CONFIG::ENDDEBUG" 
+    replace=""/>    <!-- Code block for debug (ignores contained comments) -->
+    
+<replaceregex flags=""
+    pattern="${rxFunc}assert${rxArg}"
+    replace="\1//assert(\2);"/>     <!-- Debug assertion -->
+
+<replaceregex flags=""
+    pattern="${rxFunc}throwassert${rxArg}"
+    replace="\1//throwassert();"/>  <!-- Debug breakpoint -->
+    
+<replaceregex flags=""
+    pattern="${rxFunc}trace${rxArg}"
+    replace="\1//trace(\2*);"/>     <!-- Debug trace -->
+    
+<!-- Default operations -->
+&preprocess.common;
+

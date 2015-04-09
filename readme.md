@@ -4,6 +4,8 @@ This implements some build schemes for Cocos2D-js and Adobe AIR.
 
 I attempt to provide a way to reconstruct a project with the tools originally used to create it, and make it trivial to set up a build environment, for others to play along.
 
+This is a pure shell/cmd prompt build.  It should work with whatever text editor you like, along-side a Terminal/CMD/Shell window.
+
 [The Wiki Page](https://github.com/pingnak/AIRvsCocos/wiki) goes into more depth.
 
 ## Setup

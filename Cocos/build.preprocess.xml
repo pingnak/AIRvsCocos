@@ -1,6 +1,10 @@
 
 <!-- Build constants and macros injected/expanded into source code -->
 
+<!-- This conditional code block will spoil line counts -->
+<replaceregex flags="gis" byline="false"
+    pattern="CONFIG::DIKEOUT*(.+?)CONFIG::ENDDIKEOUT" 
+    replace=""/>                <!-- Eat a big block of code -->
 <replaceregex flags="g"
     pattern="CONFIG::BUILD"     
     replace="${DSTAMP}${TSTAMP}"/> <!-- Build timestamp -->
@@ -30,7 +34,9 @@
     replace="${app.CY}"/>       <!-- Center Y of game window -->
 <replaceregex flags="g"
     pattern="${rxFunc}log${rxArg}" 
-    replace="\1cc.log(\2)"/> <!-- wrap my cc.log -->
+    replace="\1cc.log(\2)"/>    <!-- wrap my cc.log -->
 <replaceregex flags="g"
     pattern="${rxFunc}logerror${rxArg}" 
     replace="\1{ cc.error('ERROR:'); cc.log(\2); }"/> <!-- log error output  -->
+
+<!-- Add math constants, macros, whatever... -->

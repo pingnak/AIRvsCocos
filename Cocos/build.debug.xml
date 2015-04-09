@@ -1,0 +1,59 @@
+
+<!-- Debug build preprocessing stage -->
+
+<replaceregex flags=""
+    pattern="${rxFunc}CONFIG::FORDEBUG${rxParens}"
+    replace="\2"/>  <!-- CONFIG::FORDEBUG(statement) -->
+
+<replaceregex flags=""
+    pattern="${rxFunc}CONFIG::FORRELEASE${rxParens}"
+    replace=""/>    <!-- CONFIG::FORRELEASE(statement) -->
+
+<replaceregex flags=""
+    pattern="${rxFunc}CONFIG::DEBUGELSE${rxFirstArg}${rxLastArg}"
+    replace="\2"/>    <!-- CONFIG::DEBUGELSE(debug,release) -->
+
+<replaceregex flags=""
+    pattern="${rxFunc}CONFIG::RELEASEELSE${rxFirstArg}${rxLastArg}"
+    replace="\3"/>    <!-- CONFIG::DEBUGELSE(release,debug) -->
+
+<!-- These two multiline conditional code blocks will spoil line counts -->
+<replaceregex flags="gis" byline="false"
+    pattern="CONFIG::RELEASE*(.+?)CONFIG::ENDRELEASE" 
+    replace=""/>    <!-- Code block for release (ignores contained comments) -->
+
+<replaceregex flags="gis" byline="false"
+    pattern="CONFIG::DEBUG*(.+?)*CONFIG::ENDDEBUG"
+    replace="\1"/>  <!-- Code block for debug (ignores contained comments) -->
+
+<!-- 
+    Debug statements MUST NOT be part of other statements, or
+    have side-effects.
+    
+    Not a 'weakness' of my sloppy regular expressions.
+    
+    Since assert/throwassert/trace appear and disappear in 
+    code, side-effects from them will make bugs.
+    
+    For instance 'assert( 0 > ++reference );' is invalid
+    code that will cause a bug, like reference count never
+    being incremented in release mode.
+-->
+
+<!-- Debug assertion -->
+<replaceregex flags=""
+    pattern="${rxFunc}assert${rxArg}"
+    replace="\1{ if( !(\2) ) { cc.error('Assertion Failed: \2'); debugger; } }"/>
+
+<!-- Debug breakpoint -->
+<replaceregex flags=""
+    pattern="${rxFunc}throwassert${rxArg}"
+    replace="\1{ cc.error('Assertion Thrown'); debugger; }"/>
+
+<!-- Debug trace -->
+<replaceregex flags=""
+    pattern="${rxFunc}trace${rxArg}"
+    replace="\1cc.log(\2);"/>
+
+&preprocess.common;
+
