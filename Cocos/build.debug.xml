@@ -55,5 +55,3 @@
     pattern="${rxFunc}trace${rxArg}"
     replace="\1cc.log(\2);"/>
 
-&preprocess.common;
-

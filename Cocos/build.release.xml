@@ -38,6 +38,3 @@
     pattern="${rxFunc}trace${rxArg}"
     replace="\1//trace(\2*);"/>     <!-- Debug trace -->
     
-<!-- Default operations -->
-&preprocess.common;
-

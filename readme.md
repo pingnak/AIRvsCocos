@@ -44,7 +44,7 @@ For a Windows Native installer, you need to build from Windows.
 
 For an OS X Native installer, you need to build from OS X. 
 
-In Flash its self, there are discrpancies in how Windows vs. Mac versions render fonts into the output, so at least be aware of that.
+In Flash its self, there are discrepancies in how Windows vs. Mac versions render fonts into the output, so at least be aware of that.
 
 http://www.adobe.com/products/air/tech-specs.html
 
@@ -54,4 +54,4 @@ http://www.adobe.com/products/air/sdk-eula.html
 
 It's just a bunch of build scripts.  I don't care what you do with them.  Don't blame me if you can't use them right, or something blows up in your face.  If you hate me for it, consider that I'll be using them, too, so maybe that's its own punishment.
 
-The Example bits and pieces of the Cocos example belong to the Cocos people, and their licensing, at least until I adapt my own, dumb 'Example' for that side of the build.
+The Example bits and pieces in the Cocos half belong to the Cocos people, and their licensing, at least until I adapt my own, dumb 'Example' for that side of the build.
