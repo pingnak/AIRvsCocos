@@ -1,0 +1,298 @@
+<!-- 
+    Compile Resource.as from contents of res/ folder, into Resource.swc
+    
+    By making a swc of the data, we can avoid re-re-re-compiling what is 
+    generally a time consuming portion of the build process.  We can also nicely
+    make it check whether the process needs to happen, now.
+
+    In general, this is just for the case that you don't use Flash to 
+    assemble and database your resources.
+
+    In general, what ends up in your 'res' folder should be exactly the 
+    format that you wanted.  Also beware that when you embed something, 
+    it's wrapped in a Flex SDK class derived from that, like 'MovieClipAsset'
+    or 'BitmapAsset'.  Lookup 'IFlexAsset' in the 'Actionscript 3.0 
+    Reference', to get a complete list, and hints on Embed syntax.  The other
+    Adobe documents for it are hard to find, so here are a couple of starting
+    points.
+    
+    Adobe document links rot like nobody's business...  use the titles in a  
+    search, if the links stop working.
+    
+    Embedding assets
+    http://help.adobe.com/en_US/flex/using/WS2db454920e96a9e51e63e3d11c0bf69084-7fce.html
+
+    Embedded Font Syntax
+    http://help.adobe.com/en_US/flex/using/WS2db454920e96a9e51e63e3d11c0bf69084-7f5f.html#WS2db454920e96a9e51e63e3d11c0bf69084-7e0e
+
+    import com.resource;
+    var instance : type = new Resource.label();
+    
+-->
+
+
+<!-- Make it easy to override some stuff -->
+<project basedir="." name="Resource Builder" default="resources" >
+
+    <!-- 
+        This allow you to override certain, private settings with your own folder  
+        in ~/ant/build.properties.  Like passwords and device IDs.
+    -->
+	<property file="${user.home}/ant/build.properties"/>
+
+	<!-- Import settings from environment -->
+	<property environment="env" />
+
+	<!-- Get paths from 'ant -f setup.xml' -->
+    <property file="../configure.properties"/>
+	
+	<!-- Import build.properties, for project -->
+	<property file="build.properties"/>
+
+    <!-- Where the stuff comes from -->
+    <property name="resource.res"     value="res" />
+    
+    <!-- Intermediate AS3 file, too define the class -->
+    <property name="resource.as"      value="src/com/resource/Resource.as" />
+    
+    <!-- What swc file to dump all of this into -->
+    <property name="embedded.swc"     value="src/Resource.swc" />
+
+    <!-- 
+        Subset of unicode, to embed from imported fonts.
+        
+        Embed the whole font, with an empty definition, or a subset, per 
+        http://www.w3.org/TR/1998/REC-CSS2-19980512/fonts.html#descdef-unicode-range
+    -->
+    <property name="unicode_range"    value=''/>
+    <property name="unicode_range"    value=', unicodeRange="$U+??,U+100-220,U+4??"'/>
+
+<!-- Decide whether this should even happen, if any outputs are 'newer' -->
+<target name="uptodate" >
+    <condition property="build.uptodate">
+        <and>
+            <available file="${intermediate.dir}"/>
+            <uptodate targetfile="${embedded.swc}">
+                <srcfiles dir="${res}" includes="**/*"/>
+                <srcfiles dir="." includes="res2swc.xml"/>
+            </uptodate>
+        </and>
+    </condition>
+</target>
+
+<!--
+    Generate an embedded swc file from a folder full of resources
+    
+    You get a class named Resource in com.resource
+    
+    Re-write and customize, per your requirements.
+-->
+<target name="resources" description="Compile embedded swc file" unless="resource.uptodate" depends="uptodate" >
+    <sequential>
+        <tstamp />
+        <echo>Building Resource List</echo>
+
+        <!-- 
+            Broken into categories, to group the resources and handle them
+            'differently', as appropriate.  
+            
+            You can embed almost anything as 'ByteArray', and jump through 
+            hoops to get the data out of it, if you wish.
+        -->
+
+        <!-- 
+            Swf imports
+
+            [Embed(source=path)] 
+            public static const label : Class;
+
+            Caution: If you're doing iOS, you need to export them from Flash
+            as SWC, or it won't work right.
+            
+            See ApplicationDomain class, to get at symbols within.
+        -->
+        <fileset id="res.swf" dir="${resource.res}">
+            <include name='**/*.swf'/>
+        </fileset>
+        <pathconvert property="embed.swf" refid="res.swf" pathsep="${line.separator}">
+            <chainedmapper>
+                <scriptmapper language="javascript">
+self.label = source.substring(source.lastIndexOf('/')+1).replace(/[^A-Z0-9a-z]/ig,'_');
+self.addMappedName("    [Embed(source='"+source+"')]");
+self.addMappedName("    public static const cls_"+self.label+" : Class;");
+self.addMappedName("");
+                </scriptmapper>
+            </chainedmapper>
+        </pathconvert>
+
+        <!--
+            Image imports 
+
+            One BitmapData can be shared among many Bitmaps.  Or just use 
+            'new cls_label()', to make Bitmaps.
+            
+            We keep more of the path on images, because some of them are image
+            sequences that we can build a list from.
+            
+            [Embed(source=path)]
+            public static const cls_label : Class;
+            public static const bmd_label : BitmapData = (new cls_label()).bitmapData;
+        -->
+        <fileset id="res.images" dir="${resource.res}">
+            <include name='**/*.jpg'/>
+            <include name='**/*.jpeg'/>
+            <include name='**/*.png'/>
+            <include name='**/*.gif'/>
+            <include name='**/*.svg'/>
+        </fileset>
+        <pathconvert property="embed.images" refid="res.images" pathsep="${line.separator}">
+            <chainedmapper>
+                <scriptmapper language="javascript">
+var label = source.substring(source.indexOf('res/')+4).replace(/[^A-Z0-9a-z]/ig,'_');
+self.addMappedName("    [Embed(source='"+source+"')]");
+self.addMappedName("    public static const cls_"+label+" : Class;");
+self.addMappedName("    public static const "+label+" : BitmapData = (new cls_"+label+"()).bitmapData;");
+self.addMappedName("");
+                </scriptmapper>
+            </chainedmapper>
+        </pathconvert>
+        
+        <!--
+            Audio imports
+
+            We only need one snd_label 'Sound' class for every sound.
+
+            We keep more of the path on images, because some of them are image
+            sequences that we can build a list from.
+            
+            Resource.snd_label.play();
+
+            [Embed(source=path)] 
+            public static const cls_label : Class;
+            public static const snd_label : Sound = (new cls_label()) as Sound;
+        -->
+        <fileset id="res.sounds" dir="${resource.res}">
+            <include name='**/*.mp3'/>
+            <include name='**/*.wav'/>
+            <include name='**/*.aif'/>
+            <include name='**/*.aiff'/>
+            <include name='**/*.asnd'/>
+        </fileset>
+        <pathconvert property="embed.sounds" refid="res.sounds" pathsep="${line.separator}">
+            <chainedmapper>
+                <scriptmapper language="javascript">
+var label = source.substring(source.indexOf('res/')+4).replace(/[^A-Z0-9a-z]/ig,'_');
+self.addMappedName("    [Embed(source='"+source+"')]");
+self.addMappedName("    public static const cls_"+label+" : Class;");
+self.addMappedName("    public static const "+label+" : Sound = (new cls_"+label+"()) as Sound;");
+self.addMappedName("");
+                </scriptmapper>
+            </chainedmapper>
+        </pathconvert>
+
+        <!-- 
+            FONT imports 
+            
+            Note, Flash uses the name embedded in the font metadata, not the 
+            font's name.  So you need to inspect that font file externally, 
+            to find out its name.
+            
+            [Embed(source=path, fontName=fontname, advancedAntiAliasing="true" ${unicode.range} )]
+            public static const cls_label : Class;
+            public static const fnt_label : Font = (new cls_label()) as Font;
+            
+            http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/text/Font.html
+        -->
+        <fileset id="res.fonts" dir="${resource.res}">
+            <include name='**/*.otf'/>
+            <include name='**/*.ttf'/>
+        </fileset>
+        <pathconvert property="embed.fonts" refid="res.fonts" pathsep="${line.separator}">
+            <chainedmapper>
+                <scriptmapper language="javascript" setbeans="true" >
+var label = source.substring(source.lastIndexOf('/')+1).replace(/[^A-Z0-9a-z]/ig,'_');
+var fontname = source.substring(source.lastIndexOf('/')+1).substring(0,source.lastIndexOf('.'));
+self.addMappedName("    [Embed(source='"+source+"', fontName='"+fontname+"', advancedAntiAliasing='true' "+unicode_range+")]");
+self.addMappedName("    public static const cls_"+label+" : Class;");
+self.addMappedName("");
+                </scriptmapper>
+            </chainedmapper>
+        </pathconvert>
+
+        <!-- 
+            ByteArray imports (anything else)
+            [Embed(source=path, mimeType="application/octet-stream")] 
+            public static const cls_label : Class;
+            public static const ba_label : ByteArray = (new label()) as ByteArray;
+        -->
+        <fileset id="res.binary" dir="${resource.res}">
+            <include name='**/*'/>
+            <!-- Exclude whatever we handled, earlier -->
+            <exclude name='**/*.swf'/>
+            <exclude name='**/*.jpg'/>
+            <exclude name='**/*.jpeg'/>
+            <exclude name='**/*.png'/>
+            <exclude name='**/*.gif'/>
+            <exclude name='**/*.svg'/>
+            <exclude name='**/*.mp3'/>
+            <exclude name='**/*.wav'/>
+            <exclude name='**/*.aif'/>
+            <exclude name='**/*.aiff'/>
+            <exclude name='**/*.asnd'/>
+            <exclude name='**/*.otf'/>
+            <exclude name='**/*.ttf'/>
+            <exclude name='**/*.xml'/>
+        </fileset>
+        <pathconvert property="embed.binary" refid="res.binary" pathsep="${line.separator}">
+            <chainedmapper>
+                <scriptmapper language="javascript">
+var label = source.substring(source.lastIndexOf('/')+1).replace(/[^A-Z0-9a-z]/ig,'_');
+self.addMappedName("    [Embed(source='"+source+"', mimeType='application/octet-stream')]");
+self.addMappedName("    public static const cls_"+label+" : Class;");
+self.addMappedName("");
+                </scriptmapper>
+            </chainedmapper>
+        </pathconvert>
+
+<!-- Write the resource class -->
+<echo file="${resource.as}" append="false" >
+/* Generated by res2swc.xml from ${resource.res} folder */
+package com.resource
+{
+	import flash.display.BitmapData;
+	import flash.display.Bitmap;
+	import flash.media.Sound;
+	import flash.utils.ByteArray;
+	import flash.text.Font;
+public class Resource
+{
+    /* Images */
+${embed.images}
+    /* Sounds */
+${embed.sounds}
+    /* Fonts (make sure font file name matches the internal font name) */
+${embed.fonts}
+    /* SWF files (not for iOS) */
+${embed.swf}
+    /* Generic ByteArray data */
+${embed.binary}
+}
+}
+</echo>
+
+<!--
+    Using compc, the component compiler
+    http://help.adobe.com/en_US/flex/using/WS2db454920e96a9e51e63e3d11c0bf69084-7fd2.html
+-->
+        <echo>Compiling Resource List</echo>
+        <exec executable="${AIR.COMPC}" failonerror="true" searchpath="true" >
+            <arg line="-target-player='${fullplayerversion}'" />
+            <arg line="-source-path './src'" /> 
+            <arg line="-output '${embedded.swc}'" />  
+            <arg line="-include-classes 'com.resource.Resource'" />
+        </exec>
+
+    </sequential>
+</target>
+
+</project>
