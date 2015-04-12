@@ -148,7 +148,7 @@ self.addMappedName("");
         <pathconvert property="embed.images" refid="res.images" pathsep="${line.separator}">
             <chainedmapper>
                 <scriptmapper language="javascript">
-var label = source.substring(source.indexOf('res/')+4).replace(/[^A-Z0-9a-z]/ig,'_');
+var label = source.substring(source.indexOf('/res/')+5).replace(/[^A-Z0-9a-z]/ig,'_');
 self.addMappedName("    [Embed(source='"+source+"')]");
 self.addMappedName("    public static const cls_"+label+" : Class;");
 self.addMappedName("    public static const "+label+" : BitmapData = (new cls_"+label+"()).bitmapData;");
@@ -181,7 +181,7 @@ self.addMappedName("");
         <pathconvert property="embed.sounds" refid="res.sounds" pathsep="${line.separator}">
             <chainedmapper>
                 <scriptmapper language="javascript">
-var label = source.substring(source.indexOf('res/')+4).replace(/[^A-Z0-9a-z]/ig,'_');
+var label = source.substring(source.indexOf('/res/')+5).replace(/[^A-Z0-9a-z]/ig,'_');
 self.addMappedName("    [Embed(source='"+source+"')]");
 self.addMappedName("    public static const cls_"+label+" : Class;");
 self.addMappedName("    public static const "+label+" : Sound = (new cls_"+label+"()) as Sound;");

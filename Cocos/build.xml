@@ -253,24 +253,29 @@ ${src.filelist}
                 <include name='**/*'/>
             </fileset>
         </copy>            
-        <fileset id="res.files" dir="res">
-            <include name='**/*'/>
-            <exclude name="*.ico"/>
-            <exclude name="*.js"/>
-        </fileset>
+        <pathconvert property="res.files" pathsep="${line.separator}">
+        <sort>
+            <fileset id="res.files" dir="res">
+                <include name='**/*'/>
+                <exclude name="*.ico"/>
+                <exclude name="*.js"/>
+            </fileset>
+            <name/>
+        </sort>
+        </pathconvert>
         <!-- Generate a list of paths for loader to load -->
         <pathconvert property="res.pushy" refid="res.files" pathsep="${line.separator}">
             <chainedmapper>
-                <regexpmapper from="^.*?/(res/.*$)" to='"\1",' />
+                <regexpmapper from="^.*?/(res/.*$)" to='    "\1",' />
             </chainedmapper>
         </pathconvert>
         <!-- Generate a dictionary to paths - Cheat with scriptmapper! -->
         <pathconvert property="res.labeled" refid="res.files" pathsep="${line.separator}">
             <chainedmapper>
                 <scriptmapper language="javascript">
-self.addMappedName("    "+
-source.substring( source.lastIndexOf('/')+1).replace(/[^A-Z0-9a-z]/ig,'_') + ': ' +
-source.replace(/^.*?\/(res\/.*$)/, '"$1",') );
+                    var label = source.substring(source.indexOf('/res/')+5).replace(/[^A-Z0-9a-z]/ig,'_');
+                    var relpath = source.replace(/^.*?\/(res\/.*$)/, "$1");
+                    self.addMappedName("    "+label+': "'+relpath+'",');
                 </scriptmapper>
             </chainedmapper>
         </pathconvert>
