@@ -144,10 +144,7 @@
                 <fileset dir="src">
                     <include name='**/*.js'/>
                     <include name='**/*.json'/>
-                    <include name='**/*.html'/>
                     <exclude name="main.js"/>
-                    <exclude name="index.html"/>
-                    <exclude name="index_windowed.html"/>
                 </fileset>
                 <filterchain>
                     &preprocess.common;
@@ -157,8 +154,8 @@
             <copy todir="${targetname}" overwrite="true" >
                 <fileset dir="src">
                     <include name="main.js"/>
-                    <include name="index.html"/>
-                    <include name="index_windowed.html"/>
+                    <include name='**/*.html'/>
+                    <include name='**/*.css'/>
                 </fileset>
                 <filterchain>
                     &preprocess.common;
@@ -204,10 +201,7 @@ ${src.filelist}
                 <fileset dir="src">
                     <include name='**/*.js'/>
                     <include name='**/*.json'/>
-                    <include name='**/*.html'/>
                     <exclude name="main.js"/>
-                    <exclude name="index.html"/>
-                    <exclude name="index_windowed.html"/>
                 </fileset>
                 <filterchain>
                     &preprocess.common;
@@ -217,8 +211,8 @@ ${src.filelist}
             <copy todir="${targetname}" overwrite="true" >
                 <fileset dir="src">
                     <include name="main.js"/>
-                    <include name="index.html"/>
-                    <include name="index_windowed.html"/>
+                    <include name='**/*.html'/>
+                    <include name='**/*.css'/>
                 </fileset>
                 <filterchain>
                     &preprocess.common;
@@ -474,27 +468,6 @@ key.alias.password=${android.certificate.alias.password}
 
     </target>
 
-    
-    <target name="web.configure" depends="copy.resources" >
-        	<macro-uptodate targetfile="web/game.min.js" property="web.uptodate" />
-
-        <sequential unless:set="web.uptodate">
-
-            <echo>Updating web resources...</echo>
-    
-            <!-- Keep strays from being left in res or src -->
-            <delete includeemptydirs="true">
-                <fileset dir="${app.deploy}/web" includes="**/*"/>
-            </delete>
-            
-            <!-- Copy the artwork back -->
-            <copy todir="${targetname}/frameworks/cocos2d-html5" >
-                <fileset dir="myframeworks/web">
-                    <include name="Base64Images.js" />
-                </fileset>
-            </copy>
-        </sequential>
-    </target>
 
     <!--
         Web is the best supported version, especially to debug in.
@@ -538,10 +511,44 @@ key.alias.password=${android.certificate.alias.password}
         Try 'Reset IE', in the 'Advanced' settings tab.  Then google for more.
 
     -->    
+    <target name="web.configure" depends="copy.resources" >
+        	<macro-uptodate targetfile="web/game.min.js" property="web.uptodate" />
+
+        <sequential unless:set="web.uptodate">
+
+            <echo>Updating web resources...</echo>
+    
+            <!-- Keep strays from being left in res or src -->
+            <delete includeemptydirs="true">
+                <fileset dir="${app.deploy}/web" includes="**/*"/>
+            </delete>
+            
+            <!-- Copy the artwork back -->
+            <copy todir="${targetname}/frameworks/cocos2d-html5" >
+                <fileset dir="myframeworks/web">
+                    <include name="Base64Images.js" />
+                </fileset>
+            </copy>
+
+            <!-- Copy icon file to root of web site -->
+            <copy todir="${targetname}/publish/html5" overwrite="true" >
+                <fileset dir="myframeworks/web">
+                    <include name="favicon.ico" />
+                </fileset>
+            </copy>
+            
+        </sequential>
+    </target>
+
     <target name="web" description="Make Web" depends="web.configure" unless="web.uptodate" >
         <macro-preprocess-release />
 		<macro-cocos command="compile -p web -m release --advanced --source-map" />
-		<copy todir="${app.deploy}/web"><fileset dir="${targetname}/publish/html5" ><exclude name="build.xml"/></fileset></copy>
+		<copy todir="${app.deploy}/web">
+            <fileset dir="${targetname}/publish/html5" >
+                <include name="**/*" />
+        		    <exclude name="build.xml" />
+            </fileset>
+        </copy>
     </target>
 
     <target name="webdebug" description="Make Web Debug Build" depends="web.configure" >
@@ -558,7 +565,12 @@ key.alias.password=${android.certificate.alias.password}
     <target name="runweb" description="Run Web" depends="web.configure" >
         <macro-preprocess-release />
 		<macro-cocos command="run -p web -m release --advanced --source-map" />
-		<copy todir="${app.deploy}/web"><fileset dir="${targetname}/publish/html5" ><exclude name="build.xml"/></fileset></copy>
+		<copy todir="${app.deploy}/web">
+            <fileset dir="${targetname}/publish/html5" >
+                <include name="**/*" />
+        		    <exclude name="build.xml" />
+            </fileset>
+        </copy>
     </target>
 
     <target name="debugweb" description="Make Web Debug Build" depends="web.configure" >
@@ -589,15 +601,15 @@ key.alias.password=${android.certificate.alias.password}
             </exec>
 
             <!-- Update AndroidManifest.xml (only if newer) -->
-            <copy todir="${targetname}/frameworks/runtime-src/proj.android" >
+            <copy todir="${targetname}/frameworks/runtime-src/proj.android" overwrite="true" >
                 <fileset dir="myframeworks/android/">
                     <include name="AndroidManifest.xml" />
                 </fileset>
             </copy>
     
             <!-- Update Android icons/artwork (only if newer) -->
-            <copy todir="myframeworks/android/res" >
-                <fileset dir="${targetname}/frameworks/runtime-src/proj.android/res">
+            <copy todir="${targetname}/frameworks/runtime-src/proj.android/res" overwrite="true" >
+                <fileset dir="myframeworks/android/res">
                     <include name="**/*.png" />
                     <include name="**/*.jpg" />
                     <include name="**/*.gif" />
@@ -679,10 +691,10 @@ key.alias.password=${android.certificate.alias.password}
 		    
 		    It will (and should) fail with a .ipa, signed for the app store.
 		-->
-        <exec executable="ideviceinstaller" dir="${app.deploy}/ios" failonerror="false" searchpath="true" >
+        <exec executable="ideviceinstaller" dir="${app.deploy}" failonerror="false" searchpath="true" >
             <arg line="--uninstall ${app.id}" />
         </exec>
-        <exec executable="ideviceinstaller" dir="${app.deploy}/ios" failonerror="false" searchpath="true" >
+        <exec executable="ideviceinstaller" dir="${app.deploy}" failonerror="false" searchpath="true" >
             <arg line="--install ${targetname}.ipa" />
         </exec>
     </target>

@@ -54,6 +54,14 @@
         <icon name="drawable-xhdpi/icon.png"  size="96" />
         <icon name="drawable-xxhdpi/icon.png" size="144"/>
         <icon name="drawable-xxxhdpi/icon.png" size="192"/>
+
+        <!-- Alternate naming for launcher icons (AIR) -->
+        <icon name="appicon32.png"   size="32" />
+        <icon name="appicon48.png"   size="48" />
+        <icon name="appicon72.png"   size="72" />
+        <icon name="appicon96.png"   size="96" />
+        <icon name="appicon144.png"  size="144"/>
+        <icon name="appicon192.png"  size="192"/>
         
         <!-- Icon for google play store -->
         <icon name="google_play.png" size="512"/>
@@ -114,26 +122,41 @@
     
     <!-- Combined iOS 6 and 7 -->
     <ios>
+        <!-- What Cocos2d has in its list -->
+        <icon name="Icon-29.png"    size="29"  />
+        <icon name="Icon-40.png"    size="40"  />
+        <icon name="Icon-50.png"    size="50"  />
+        <icon name="Icon-57.png"    size="57"  />
+        <icon name="Icon-58.png"    size="58"  />
+        <icon name="Icon-72.png"    size="72"  />
+        <icon name="Icon-76.png"    size="76"  />
+        <icon name="Icon-80.png"    size="80"  />
+        <icon name="Icon-100.png"    size="100"  />
+        <icon name="Icon-114.png"    size="114"  />
+        <icon name="Icon-120.png"    size="120"  />
+        <icon name="Icon-144.png"    size="144"  />
+        <icon name="Icon-152.png"    size="152"  />
+
         <!-- Application and WebClip Icons (Clipped ROUNDED by OS) -->
-        <icon name="icon-76.png"    size="76"  />
-        <icon name="icon-120.png"   size="120" />
-        <icon name="icon-152.png"   size="152" />
+        <icon name="appicon-76.png"    size="76"  />
+        <icon name="appicon-120.png"   size="120" />
+        <icon name="appicon-152.png"   size="152" />
 
         <!-- Settings icon -->
-        <icon name="icon-29.png"    size="29"  />
-        <icon name="icon-58.png"    size="58"  />
+        <icon name="settings-29.png"    size="29"  />
+        <icon name="settings-58.png"    size="58"  />
         
         <!-- Spotlight search results icon -->
-        <icon name="icon-40.png"    size="40"  />
-        <icon name="icon-80.png"    size="80"  />
+        <icon name="spotlight-40.png"    size="40"  />
+        <icon name="spotlight-80.png"    size="80"  />
         
         <!-- Toolbar and navigation -->
-        <icon name="icon-22.png"    size="22"  />
-        <icon name="icon-44.png"    size="44"  />
+        <icon name="toolbar-22.png"    size="22"  />
+        <icon name="toolbar-44.png"    size="44"  />
 
         <!-- Tab bar icon -->
-        <icon name="icon-25.png"    size="25"  />
-        <icon name="icon-50.png"    size="50"  />
+        <icon name="tab-25.png"    size="25"  />
+        <icon name="tab-50.png"    size="50"  />
 
         <!-- iTunes Artwork -->
         <icon name="iTunesArtwork512.png"   size="512"  />
@@ -144,12 +167,12 @@
     <!-- Nope.  I'm not writing a native 'icns' exporter. -->
     <osx>
         <!-- Application & Document Icons -->
-        <icon name="icon16.png"   size="16"  />
-        <icon name="icon32.png"   size="32"  />
-        <icon name="icon128.png"  size="128" />
-        <icon name="icon256.png"  size="256" />
-        <icon name="icon512.png"  size="512" />
-        <icon name="icon1024.png" size="1024" />
+        <icon name="appicon16.png"   size="16"  />
+        <icon name="appicon32.png"   size="32"  />
+        <icon name="appicon128.png"  size="128" />
+        <icon name="appicon256.png"  size="256" />
+        <icon name="appicon512.png"  size="512" />
+        <icon name="appicon1024.png" size="1024" />
         <!-- Menu Bar Icon -->
         <icon name="menubar22.png" size="22" />
         <!-- Sidebar icon -->
@@ -170,6 +193,15 @@
     <windows>
         <!-- App icon -->
         <icon name="application.ico"  size="16,24,32,48,64,128,256"  />
+        <!-- Alternate App icon (AIR) -->
+        <icon name="appicon16.png"   size="16"  />
+        <icon name="appicon24.png"   size="24"  />
+        <icon name="appicon32.png"   size="32"  />
+        <icon name="appicon48.png"   size="48"  />
+        <icon name="appicon64.png"   size="64"  />
+        <icon name="appicon128.png"  size="128" />
+        <icon name="appicon256.png"  size="256" />
+
         <!-- Toolbar icon -->
         <icon name="toolbar16.png"   size="16"  />
         <icon name="toolbar24.png"   size="24"  />

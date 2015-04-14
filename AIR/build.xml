@@ -57,7 +57,9 @@ This will enable the debugger and document generator.
 
 
 -->
-<project basedir="." name="${targetname}" default="air" >
+<project name="Adobe AIR Builds"
+    xmlns:if="ant:if" xmlns:unless="ant:unless"
+    basedir="."  default="air" >
 
     <!-- 
         This allow you to override certain, private settings with your own folder  
@@ -74,6 +76,18 @@ This will enable the debugger and document generator.
 	<!-- Import build.properties, for project -->
 	<property file="build.properties"/>
 
+    <!-- Determine if project is up-to-date -->
+	<macrodef name="macro-uptodate" >
+		<attribute name="targetfile"/>  <!-- Which file in publish folder --> 
+		<attribute name="property"/>    <!-- What property to set with answer -->
+        
+	    <sequential>
+            <uptodate targetfile="@{targetfile}" property="@{property}">
+                <srcfiles dir="." includes="build.*"/>
+                <srcfiles dir="src" includes="**/*"/>
+            </uptodate>
+        </sequential>
+	</macrodef>
 	
     <!-- Debugging...    
 	<echoproperties/>
@@ -176,7 +190,10 @@ This will enable the debugger and document generator.
 	    Install the developer certificate, and export a p12 for it
 	-->
     <target name="ios" description="IOS Build" >
-		<sequential>
+        	<macro-uptodate property="ios.uptodate" targetfile="${ios.output}"/> 
+    
+        <sequential unless:set="ios.uptodate" >
+        
 			<echo>IOS Release Build...</echo>
 			<delete file="${ios.output}" quiet="true"/>
 			<macro-build target="${ios.swf.path}" debug="false" release="true" ios="true" android="false" air="false" buildtype="+configname=airmobile" />
@@ -194,7 +211,8 @@ This will enable the debugger and document generator.
 				<!-- Tell adt where to find the .ane files. 
 				<arg line="-extdir '${library.path}'"/>
 				-->
-				<arg line="-C ${ios.deploy} ."/>	<!-- Change folder, add it all -->
+				<arg line="-C ${ios.deploy}"/>	<!-- Change folder -->
+				<arg line="."/> 				<!-- Recursively add everything in deploy -->
 			</exec>
 		</sequential>
 	</target>
@@ -323,7 +341,9 @@ This will enable the debugger and document generator.
 	    Generates a certificate, if you don't have one.
 	-->
     <target name="android" description="Android Build" depends="androidcert" >
-		<sequential>
+        	<macro-uptodate property="android.uptodate" targetfile="${android.output}"/> 
+    
+        <sequential unless:set="android.uptodate" >
 			<echo>Android Release Build...</echo>
 			<delete file="${android.output}" quiet="true"/>
 			<macro-build target="${android.swf.path}" debug="false" release="true" ios="false" android="true" air="false" buildtype="+configname=airmobile"/>
@@ -358,23 +378,28 @@ This will enable the debugger and document generator.
 			<exec executable="${AIR.ADT}" searchpath="true" vmlauncher="false" failonerror="false" >
 			    <arg line="-uninstallApp"/>
 			    <arg line="-platform Android"/>
-			    <arg line="-device ${android.device}"/>
 			    <arg line="-appid ${app.id}"/>
+			    <!--<arg line="-device ${android.device}"/>-->
 			</exec>
 			<echo>Install AIR Runtime...</echo>
 			<exec executable="${AIR.ADT}" searchpath="true" vmlauncher="false" failonerror="false" >
 			    <arg line="-installRuntime"/>
 			    <arg line="-platform Android"/>
-			    <arg line="-device ${android.device}"/>
+			    <!--<arg line="-device ${android.device}"/>-->
 			</exec>
 			<echo>Install...</echo>
 			<exec executable="${AIR.ADT}" searchpath="true" vmlauncher="false" failonerror="true" >
 			    <arg line="-installApp"/>
 			    <arg line="-platform Android"/>
-			    <arg line="-device ${android.device}"/>
 			    <arg line="-package ${android.output}"/>
+			    <!--<arg line="-device ${android.device}"/>-->
 			</exec>
-
+			<exec executable="${AIR.ADT}" searchpath="true" vmlauncher="false" failonerror="true" >
+			    <arg line="-launchApp"/>
+			    <arg line="-platform Android"/>
+			    <arg line="-appid ${app.id}"/>
+			    <!--<arg line="-device ${android.device}"/>-->
+			</exec>
 		</sequential>
     </target>
 
@@ -462,8 +487,11 @@ This will enable the debugger and document generator.
 	    Release mode AIR build
 	-->
 	<target name="air" description="Build AIR Deployable Target" depends="aircert" >
-		<sequential>
-		    <echo>AIR Release Build...</echo>
+        	<macro-uptodate property="air.uptodate" targetfile="${air.output}"/> 
+    
+        <sequential unless:set="air.uptodate" >
+
+            <echo>AIR Release Build...</echo>
 			<delete file="${air.output}" quiet="true" />
 			<macro-build target="${air.swf.path}" debug="false" release="true" android="false" ios="false" air="true" mobile="false" buildtype="+configname=air" />
 
@@ -477,7 +505,8 @@ This will enable the debugger and document generator.
                 
                 <arg line="${air.output}"/>		<!-- Output file -->
                 <arg line="${air.profile}"/>	    <!-- AIR project info -->
-                <arg line="-C ${air.deploy} ."/>	<!-- Change folder, add it all -->
+				<arg line="-C ${air.deploy}"/>	<!-- Change folder -->
+				<arg line="."/> 				<!-- Recursively add everything in deploy -->
 			</exec>
 
 			<!--
@@ -486,7 +515,7 @@ This will enable the debugger and document generator.
 			<echo>Native Packaging...</echo>
 
 			<!-- Make a native, self-installing build -->
-			<exec executable="${AIR.ADT}" osfamily="WINDOWS" searchpath="true" vmlauncher="false" failonerror="true" >
+			<exec executable="${AIR.ADT}" osfamily="windows" searchpath="true" vmlauncher="false" failonerror="true" >
                 <arg line="-package"/>
                 <arg line="-storetype pkcs12"/>	<!-- Our certificate -->
                 <arg line="-storepass ${air.cert.password}"/>
@@ -494,9 +523,23 @@ This will enable the debugger and document generator.
                 <arg line="-target native"/>		
                 <arg line="${air.output.native}"/>	<!-- Output file -->
                 <arg line="${air.profile}"/>	    <!-- AIR project info -->
-                <arg line="-C ${air.deploy} ."/>	<!-- Change folder, add it all -->
+				<arg line="-C ${air.deploy}"/>	<!-- Change folder -->
+				<arg line="."/> 				<!-- Recursively add everything in deploy -->
 			</exec>
-	
+
+			<!-- Make a native, self-installing build -->
+			<exec executable="${AIR.ADT}" osfamily="mac" searchpath="true" vmlauncher="false" failonerror="true" >
+                <arg line="-package"/>
+                <arg line="-storetype pkcs12"/>	<!-- Our certificate -->
+                <arg line="-storepass ${air.cert.password}"/>
+                <arg line="-keystore ${air.certificate}"/>
+                <arg line="-target native"/>		
+                <arg line="${air.output.native}"/>	<!-- Output file -->
+                <arg line="${air.profile}"/>	    <!-- AIR project info -->
+				<arg line="-C ${air.deploy}"/>	<!-- Change folder -->
+				<arg line="."/> 				<!-- Recursively add everything in deploy -->
+			</exec>
+			
 		</sequential>
 	</target>
 

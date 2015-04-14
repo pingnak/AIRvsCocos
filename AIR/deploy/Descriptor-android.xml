@@ -3,8 +3,14 @@
     <!--
         AIR application descriptor elements
         http://help.adobe.com/en_US/air/build/WSfffb011ac560372f2fea1812938a6e463-8000.html 
+
+        Adobe AIR quietly prepends an 'air', making this 'air.com.air.company.Example'
+        
+        It's hidden by the AIR tools, but Something to be aware of, if you use 
+        the android tools on it.
+    
     -->
-    <id>com.evildave.Example</id>
+    <id>com.air.company.Example</id>
     <versionNumber>1.0</versionNumber>
     <versionLabel></versionLabel>
     <filename>Example</filename>
@@ -42,9 +48,13 @@
     <allowBrowserInvocation>false</allowBrowserInvocation>
 	<!-- Setup/Deployment Settings -->
     <icon>
-        <image36x36>AppIconsForPublish/icon3636.png</image36x36>
-        <image48x48>AppIconsForPublish/icon4848.png</image48x48>
-        <image72x72>AppIconsForPublish/icon7272.png</image72x72>
+        <image32x32>AppIconsForPublish/appicon32.png</image32x32>
+        <image48x48>AppIconsForPublish/appicon48.png</image48x48>
+        <image72x72>AppIconsForPublish/appicon72.png</image72x72>
+        <image96x96>AppIconsForPublish/appicon96.png</image96x96>
+        <image144x144>AppIconsForPublish/appicon144.png</image144x144>
+        <image192x192>AppIconsForPublish/appicon192.png</image192x192>
+        <image16x16>AppIconsForPublish/context16x16.png</image16x16>
     </icon>
     <android>
         <!-- This is for that admob extension -->

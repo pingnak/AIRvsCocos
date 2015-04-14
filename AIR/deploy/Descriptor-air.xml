@@ -4,7 +4,19 @@
         AIR application descriptor elements
         http://help.adobe.com/en_US/air/build/WSfffb011ac560372f2fea1812938a6e463-8000.html 
     -->
-    <id>com.evildave.Example</id>
+    <!-- 
+        You might want to keep air and cocos versions of the app separately 
+        identified.  In case you wanted to be able to install/remove them 
+        separately on your various devices.
+        
+        Also, if you delete/recreate the p12 file for android/air, expect
+        an error until you explicitly remove the previous version of the app.
+        
+        If something gets 'bent' after installing 'native' packages or using 
+        'app' from the Cocos side, you'll have to rename this, or the AIR 
+        installer will 'fail'.
+    -->
+    <id>com.air.company.Example</id>
     <versionNumber>1.0</versionNumber>
     <filename>Example</filename>
     <description>Example App</description>
@@ -43,10 +55,12 @@
     <allowBrowserInvocation>false</allowBrowserInvocation>
 	<!-- Setup/Deployment Settings -->
     <icon>
-        <image16x16>AppIconsForPublish/icon1616.png</image16x16>
-        <image32x32>AppIconsForPublish/icon3232.png</image32x32>
-        <image48x48>AppIconsForPublish/icon4848.png</image48x48>
-        <image128x128>AppIconsForPublish/icon128128.png</image128x128> 
+        <image16x16>AppIconsForPublish/appicon16.png</image16x16>
+        <image32x32>AppIconsForPublish/appicon32.png</image32x32>
+        <image48x48>AppIconsForPublish/appicon48.png</image48x48>
+        <image128x128>AppIconsForPublish/appicon128.png</image128x128>
+        <image512x512>AppIconsForPublish/appicon512.png</image512x512>
+        <image1024x1024>AppIconsForPublish/appicon1024.png</image1024x1024>
     </icon>
     <supportedProfiles>desktop extendedDesktop</supportedProfiles>
 </application>
