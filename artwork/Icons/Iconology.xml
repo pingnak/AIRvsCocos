@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+    Icon exporter naming and configuration.
+
+    See http://iconhandbook.co.uk/reference/chart 
+-->
+
+<Iconology>
+    <Web folder="web">
+        <!-- 
+            http://en.wikipedia.org/wiki/ICO_%28file_format%29 
+            http://iconhandbook.co.uk/reference/chart/favicons/ 
+        -->
+        <icon name="favicon.ico" size="16,24,32,64"/>
+        <icon name="favicon.png" size="96"/>
+        <icon name="favicon16.png" size="16"/>
+        <icon name="favicon24.png" size="24"/>
+        <icon name="favicon32.png" size="32"/>
+        <icon name="favicon64.png" size="64"/>
+        <icon name="pinned.png" size="144"/>
+        <icon name="apple-touch-icon-72x72-precomposed.png" size="72"/>
+        <icon name="apple-touch-icon-120x120-precomposed.png" size="120" />
+        <icon name="apple-touch-icon-152x152-precomposed.png" size="152"/>
+        <icon name="favicon-coast.png" size="228"/>
+       
+        <echo file=""><![CDATA[<!-- From Iconology.xml -->
+
+<!-- Standard Favicon -->
+<link rel="icon" type="image/x-icon" href="favicon.ico" />
+
+<!-- For iPhone 4 Retina display: -->
+<link rel="apple-touch-icon-precomposed" sizes="114x114" href="apple-touch-icon-114x114-precomposed.png">
+
+<!-- For iPad: -->
+<link rel="apple-touch-icon-precomposed" sizes="72x72" href="apple-touch-icon-72x72-precomposed.png">
+
+<!-- For iPhone: -->
+<link rel="apple-touch-icon-precomposed" href="apple-touch-icon-57x57-precomposed.png">
+
+<!-- For Windows 8: -->
+<meta name="msapplication-TileImage" content=“pinned.png”>
+<meta name="msapplication-TileColor" content="#ef0303”>
+
+<!-- For Opera Coast: -->  
+<link rel="icon" href="favicon-coast.png" sizes="228x228">
+]]></echo>
+    </Web>
+    <android>
+        <!-- Launcher -->
+        <icon name="drawable-ldpi/icon.png"   size="32" />
+        <icon name="drawable-mdpi/icon.png"   size="48" />
+        <icon name="drawable-hdpi/icon.png"   size="72" />
+        <icon name="drawable-xhdpi/icon.png"  size="96" />
+        <icon name="drawable-xxhdpi/icon.png" size="144"/>
+        <icon name="drawable-xxxhdpi/icon.png" size="192"/>
+        
+        <!-- Icon for google play store -->
+        <icon name="google_play.png" size="512"/>
+
+        <!-- Action bar, Dialog & Tab icons -->
+        <icon name="action24x24.png"   size="24" area="32" />
+        <icon name="action36x36.png"   size="36" area="48" />
+        <icon name="action48x48.png"   size="48" area="64" />
+        <icon name="action72x72.png"   size="72" area="96" />
+        <icon name="action96x96.png"   size="96" area="128" />
+        
+        <!-- Small Contextual Icons -->
+        <icon name="context16x16.png"   size="16" />
+        <icon name="context24x24.png"   size="24" />
+        <icon name="context32x32.png"   size="32" />
+        <icon name="context48x48.png"   size="48" />
+        <icon name="context64x64.png"   size="64" />
+        
+        <!-- Notification icons -->
+        <icon name="notification24x24.png"   size="22" area="24" fill="ffffffff" />
+        <icon name="notification36x36.png"   size="33" area="36" fill="ffffffff" />
+        <icon name="notification48x48.png"   size="44" area="48" fill="ffffffff" />
+        <icon name="notification72x72.png"   size="66" area="72" fill="ffffffff" />
+        <icon name="notification96x96.png"   size="88" area="96" fill="ffffffff" />
+        
+    </android>
+    
+    <blackberry>
+        <!-- App icon -->
+        <icon name="icon114x114" size="114" />
+        <icon name="icon94x94" size="94" />
+        
+        <!-- Action bar and menu icons -->
+        <icon name="action36x36.png"   size="81" />
+        <icon name="action48x48.png"   size="67" />
+        
+        <!-- Components and small buttons -->
+        <icon name="component71x71.png"   size="71" />
+        <icon name="component59x59.png"   size="59" />
+        
+        <!-- Indicators -->
+        <icon name="indicator46x36.png"   size="36" />
+        <icon name="indicator31x26.png"   size="26" />
+        <icon name="indicator28x30.png"   size="28" />
+        <icon name="indicator26x22.png"   size="22" />
+        
+    </blackberry>
+
+    <chrome>
+        <icon name="icon16.png"   size="16"  />
+        <icon name="icon48.png"   size="48"  />
+        <icon name="icon128.png"  size="128" />
+    </chrome>
+
+    <googletv>
+        <icon name="favicon.png"  size="96"  />
+    </googletv>
+    
+    <!-- Combined iOS 6 and 7 -->
+    <ios>
+        <!-- Application and WebClip Icons (Clipped ROUNDED by OS) -->
+        <icon name="icon-76.png"    size="76"  />
+        <icon name="icon-120.png"   size="120" />
+        <icon name="icon-152.png"   size="152" />
+
+        <!-- Settings icon -->
+        <icon name="icon-29.png"    size="29"  />
+        <icon name="icon-58.png"    size="58"  />
+        
+        <!-- Spotlight search results icon -->
+        <icon name="icon-40.png"    size="40"  />
+        <icon name="icon-80.png"    size="80"  />
+        
+        <!-- Toolbar and navigation -->
+        <icon name="icon-22.png"    size="22"  />
+        <icon name="icon-44.png"    size="44"  />
+
+        <!-- Tab bar icon -->
+        <icon name="icon-25.png"    size="25"  />
+        <icon name="icon-50.png"    size="50"  />
+
+        <!-- iTunes Artwork -->
+        <icon name="iTunesArtwork512.png"   size="512"  />
+        <icon name="iTunesArtwork1024.png"  size="1024"  />
+        
+    </ios>
+    
+    <!-- Nope.  I'm not writing a native 'icns' exporter. -->
+    <osx>
+        <!-- Application & Document Icons -->
+        <icon name="icon16.png"   size="16"  />
+        <icon name="icon32.png"   size="32"  />
+        <icon name="icon128.png"  size="128" />
+        <icon name="icon256.png"  size="256" />
+        <icon name="icon512.png"  size="512" />
+        <icon name="icon1024.png" size="1024" />
+        <!-- Menu Bar Icon -->
+        <icon name="menubar22.png" size="22" />
+        <!-- Sidebar icon -->
+        <icon name="sidebar16.png" size="16" />
+        <icon name="sidebar18.png" size="18" />
+        <icon name="sidebar32.png" size="32" />
+        <!-- Toolbar icon -->
+        <icon name="toolbar32.png" size="32" />
+        <icon name="toolbar24.png" size="24" />
+        <!-- Toolbar icon stramlined -->
+        <icon name="toolbar19.png" size="19" />
+        <!-- Safari extension icons -->
+        <icon name="safari16.png"    size="16" />
+        <icon name="safari32.png"    size="32" />
+        <icon name="safari48.png"    size="48" />
+    </osx>
+    
+    <windows>
+        <!-- App icon -->
+        <icon name="application.ico"  size="16,24,32,48,64,128,256"  />
+        <!-- Toolbar icon -->
+        <icon name="toolbar16.png"   size="16"  />
+        <icon name="toolbar24.png"   size="24"  />
+        <icon name="toolbar32.png"   size="32"  />
+        <!-- Dialog/wizard icons -->
+        <icon name="dialog32.png"   size="32"  />
+        <icon name="dialog48.png"   size="48"  />
+        <!-- Quick launch icon -->
+        <icon name="quicklaunch40.png"   size="40"  />
+        <icon name="quicklaunch48.png"   size="48"  />
+        <!-- Balloon icon -->
+        <icon name="balloon32.png"   size="32"  />
+        <icon name="balloon48.png"   size="48"  />
+    </windows>
+    
+</Iconology>

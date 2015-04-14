@@ -20,8 +20,14 @@
     almost certainly buried in cocos, somewhere, but the simplified interface
     hides it from me, and I don't want to go digging into the bottomless rabbit
     hole, modifying things, when I just want to write a game.
+    
+    See also: 'If And Unless'
+    https://ant.apache.org/manual/ifunless.html
 -->
-<project basedir="." name="Cocos Gauntlets Build" default="web" >
+<project name="Cocos Gauntlets Build"
+    xmlns:if="ant:if" xmlns:unless="ant:unless"
+    basedir="."  default="web" >
+
 	<!-- 
 	    This turned out to be incompatible with builds under Windows... 
 	    
@@ -56,11 +62,7 @@
 	<!-- Import build.properties, for project -->
 	<property file="build.properties"/>
 
-    <!-- Debugging...    
-	<echoproperties/>
-	-->
-
-	<!-- OS Detection -->
+    <!-- OS Detection -->
     <condition property="is.windows">
         <os family="windows" />
     </condition>
@@ -76,24 +78,35 @@
             <not><os family="mac"/></not>
         </and>
     </condition>
-	
-    <!-- This horrific little thing, that ANT has never fixed -->
-    <target name="getPathWindows" if="is.windows" >
-		<property name="os.PATH" value="Path" />
-		<property name="os.OLDPATH" value="${env.Path}" />
-	</target>	
-    <target name="getPathStandard" unless="is.windows" >
-		<property name="os.PATH" value="PATH" />
-		<property name="os.OLDPATH" value="${env.PATH}" />
-	</target>	
+    
+    <!-- Configure Path vs PATH, bexause exec task has long-standing bug with PATH -->
+    <property if:set="is.windows" name="os.PATH" value="Path" />
+    <property if:set="is.windows" name="os.OLDPATH" value="${env.Path}" />
+    <property unless:set="is.windows" name="os.PATH" value="PATH" />
+    <property unless:set="is.windows" name="os.OLDPATH" value="${env.PATH}" />
 
+    <!-- Determine if project is up-to-date -->
+	<macrodef name="macro-uptodate" >
+		<attribute name="targetfile"/>  <!-- Which file in publish folder --> 
+		<attribute name="property"/>    <!-- What property to set with answer -->
+        
+	    <sequential>
+        <uptodate targetfile="${app.deploy}/@{targetfile}" property="@{property}">
+            <srcfiles dir="." includes="build.*"/>
+            <srcfiles dir="src" includes="**/*"/>
+            <srcfiles dir="res" includes="**/*"/>
+            <srcfiles dir="myframeworks" includes="**/*"/>
+        </uptodate>
+        </sequential>
+	</macrodef>
+
+	
     <!-- Invoke cocos in various prescribed manners -->
 	<macrodef name="macro-cocos">
 		<attribute name="command"/>		<!-- Command line for cocos -->
 		<attribute name="dirname" default="${targetname}"/>
 		<sequential>
 			<tstamp />
-
             
             <!--
                 Invoke cocos
@@ -182,7 +195,7 @@ ${src.filelist}
 </echo>
             
         </sequential>
-	</macrodef>
+    </macrodef>
 	
 	<macrodef name="macro-preprocess-release">
         <sequential>
@@ -244,9 +257,10 @@ ${src.filelist}
 	</macrodef>
 	
     <!-- Copy res folder and generates imports for app to load them -->
-    <target name="copy.resources" depends="getPathWindows,getPathStandard" >
+	
+    <target name="copy.resources" >
     <sequential>
-
+  
         <!-- Build resource.js from file list -->
         <copy todir="${targetname}/res" >
             <fileset dir="res">
@@ -289,7 +303,7 @@ var res = {
 ${res.labeled}
 };
 </echo>
-        </sequential>
+    </sequential>
     </target>
 	
 	<!--
@@ -299,7 +313,7 @@ ${res.labeled}
 	    
 	    Have your icons and such under version control, if you run this again.
 	-->
-    <target name="init" description="Initialize/Re-initialize Cocos2D-js Project" depends="getPathWindows,getPathStandard" >
+    <target name="init" description="Initialize/Re-initialize Cocos2D-js Project" >
         <echo>Initializing Project with Cocos</echo>
 
         <!-- Have git ignore most of this stuff. -->
@@ -358,10 +372,21 @@ key.store.password=${android.certificate.password}
 key.alias=android.keystore
 key.alias.password=${android.certificate.alias.password}
 </echo>
-
+<!-- 
+    This 'echo+cdata' dikes out a block of comands that are probably unwanted in 
+    most situations, since these resources are under version control. 
+    
+    Only useful if you're starting 'truly from scratch', or get a new version of
+    Cocos2d, with more icons/resources defined.
+    
+    As a fake '#if 0', it will only add a bit of spew to the excruciatingly 
+    spew-filled '-debug' output.
+    
+    It would be nice if ant offered a 'comment' task.
+-->
+<echo level="debug"><![CDATA[
         <!-- 
-            If you use version control properly, then you can 'revert' these
-            changes, if these wipe out your existing icons.
+            This is what I used to extract the resources.
         -->
 
         <!-- Make copy of project web base64 encoded images (only if newer) -->
@@ -442,6 +467,7 @@ key.alias.password=${android.certificate.alias.password}
                 <include name="**/*.gif" />
             </fileset>
         </copy>
+]]></echo>
     
         <!-- Make the deployment folder -->
         <mkdir dir="${app.deploy}"/>
@@ -450,19 +476,24 @@ key.alias.password=${android.certificate.alias.password}
 
     
     <target name="web.configure" depends="copy.resources" >
-        <echo>Updating web resources...</echo>
+        	<macro-uptodate targetfile="web/game.min.js" property="web.uptodate" />
 
-        <!-- Keep strays from being left in res or src -->
-        <delete includeemptydirs="true">
-            <fileset dir="${app.deploy}/web" includes="**/*"/>
-        </delete>
-		
-        <!-- Copy the artwork back -->
-        <copy todir="${targetname}/frameworks/cocos2d-html5" >
-            <fileset dir="myframeworks/web">
-                <include name="Base64Images.js" />
-            </fileset>
-        </copy>
+        <sequential unless:set="web.uptodate">
+
+            <echo>Updating web resources...</echo>
+    
+            <!-- Keep strays from being left in res or src -->
+            <delete includeemptydirs="true">
+                <fileset dir="${app.deploy}/web" includes="**/*"/>
+            </delete>
+            
+            <!-- Copy the artwork back -->
+            <copy todir="${targetname}/frameworks/cocos2d-html5" >
+                <fileset dir="myframeworks/web">
+                    <include name="Base64Images.js" />
+                </fileset>
+            </copy>
+        </sequential>
     </target>
 
     <!--
@@ -507,7 +538,7 @@ key.alias.password=${android.certificate.alias.password}
         Try 'Reset IE', in the 'Advanced' settings tab.  Then google for more.
 
     -->    
-    <target name="web" description="Make Web" depends="web.configure" >
+    <target name="web" description="Make Web" depends="web.configure" unless="web.uptodate" >
         <macro-preprocess-release />
 		<macro-cocos command="compile -p web -m release --advanced --source-map" />
 		<copy todir="${app.deploy}/web"><fileset dir="${targetname}/publish/html5" ><exclude name="build.xml"/></fileset></copy>
@@ -521,7 +552,7 @@ key.alias.password=${android.certificate.alias.password}
 		    Client may want internal debug version
 		    Yes, this will literally 're-invent' project and paths into local ${app.deploy}/web
 		-->
-		
+
     </target>
     
     <target name="runweb" description="Run Web" depends="web.configure" >
@@ -535,45 +566,51 @@ key.alias.password=${android.certificate.alias.password}
 		<macro-cocos command="run -p web -m debug" />
     </target>
 
-    <!-- Make an android certificate, if it doesn't exist -->
-	<target name="checkandroidcert" >
-		<available property="androidcert.available" file="${android.certificate}" />
-	</target>
-	<target name="androidcert" description="Build Self-Signed Certificate for Android" unless="androidcert.available" depends="checkandroidcert">
-		<exec executable="keytool" searchpath="true" vmlauncher="false" failonerror="true" >
-		    <arg line="-genkey -keyalg RSA -validity 9999"/>
-		    <arg line="-dname '${android.certificate.dname}'"/>
-		    <arg line="-keystore ${android.certificate}"/>
-		    <arg line="-storepass ${android.certificate.password}"/>
-		    <arg line="-alias ${android.certificate.alias}"/>
-		    <arg line="-keypass ${android.certificate.alias.password}"/>
-		</exec>
-	</target>
 
-    <target name="android.configure" depends="androidcert,copy.resources" >
-        <echo>Updating android resources...</echo>
-		
-        <!-- Update AndroidManifest.xml (only if newer) -->
-        <copy todir="${targetname}/frameworks/runtime-src/proj.android" >
-            <fileset dir="myframeworks/android/">
-                <include name="AndroidManifest.xml" />
-            </fileset>
-        </copy>
+    <target name="android.configure" >
 
-        <!-- Update Android icons/artwork (only if newer) -->
-        <copy todir="myframeworks/android/res" >
-            <fileset dir="${targetname}/frameworks/runtime-src/proj.android/res">
-                <include name="**/*.png" />
-                <include name="**/*.jpg" />
-                <include name="**/*.gif" />
-            </fileset>
-        </copy>
+        	<macro-uptodate targetfile="${targetname}.apk" property="android.uptodate" />
+    
+        <sequential unless:set="android.uptodate">
+        
+            <echo>Updating android resources...</echo>
+
+            <antcall target="copy.resources" />
+
+            <!-- Generate certificate, if it doesn't exist -->
+            <available property="androidcert.available" file="${android.certificate}" />
+            <exec unless:set="androidcert.available" executable="keytool" searchpath="true" vmlauncher="false" failonerror="true" >
+                <arg line="-genkey -keyalg RSA -validity 9999"/>
+                <arg line="-dname '${android.certificate.dname}'"/>
+                <arg line="-keystore ${android.certificate}"/>
+                <arg line="-storepass ${android.certificate.password}"/>
+                <arg line="-alias ${android.certificate.alias}"/>
+                <arg line="-keypass ${android.certificate.alias.password}"/>
+            </exec>
+
+            <!-- Update AndroidManifest.xml (only if newer) -->
+            <copy todir="${targetname}/frameworks/runtime-src/proj.android" >
+                <fileset dir="myframeworks/android/">
+                    <include name="AndroidManifest.xml" />
+                </fileset>
+            </copy>
+    
+            <!-- Update Android icons/artwork (only if newer) -->
+            <copy todir="myframeworks/android/res" >
+                <fileset dir="${targetname}/frameworks/runtime-src/proj.android/res">
+                    <include name="**/*.png" />
+                    <include name="**/*.jpg" />
+                    <include name="**/*.gif" />
+                </fileset>
+            </copy>
+            
+        </sequential>
     </target>
 
-    <target name="android" description="Make Android" depends="android.configure" >
+    <target name="android" description="Make Android" depends="android.configure" unless="android.uptodate" >
         <macro-preprocess-release />
-		<macro-cocos command="compile -p android ${build.quiet} -m release --ndk-mode release" /> 
-		<copy tofile="${app.deploy}/${targetname}.apk"><fileset file="${targetname}/publish/android/${targetname}-release-signed.apk"/></copy>
+        <macro-cocos command="compile -p android ${build.quiet} -m release --ndk-mode release" /> 
+        <copy tofile="${app.deploy}/${targetname}.apk"><fileset file="${targetname}/publish/android/${targetname}-release-signed.apk"/></copy>
     </target>
 
     <target name="androiddebug" description="Make Debug Android" depends="android.configure" >
@@ -595,20 +632,25 @@ key.alias.password=${android.certificate.alias.password}
 
     <!-- Note: You need a Mac, with XCode (from app store) for iOS/OS X. -->
     <target name="ios.configure" if="is.osx" depends="copy.resources">
-        <echo>Updating iOS resources...</echo>
-
-        <!-- Update icons/artwork (only if newer) -->
-        <copy todir="${targetname}/frameworks/runtime-src/proj.ios_mac/ios" >
-            <fileset dir="myframeworks/ios/res">
-                <include name="**/*.png" />
-                <include name="**/*.jpg" />
-                <include name="**/*.gif" />
-            </fileset>
-        </copy>
+        	<macro-uptodate targetfile="${targetname}.ipa" property="ios.uptodate" />
+    
+        <sequential unless:set="ios.uptodate">
+    
+            <echo>Updating iOS resources...</echo>
+    
+            <!-- Update icons/artwork (only if newer) -->
+            <copy todir="${targetname}/frameworks/runtime-src/proj.ios_mac/ios" >
+                <fileset dir="myframeworks/ios/res">
+                    <include name="**/*.png" />
+                    <include name="**/*.jpg" />
+                    <include name="**/*.gif" />
+                </fileset>
+            </copy>
+        </sequential>
 		
     </target>
     
-    <target name="ios" description="Make iOS" depends="ios.configure" if="is.osx" >
+    <target name="ios" description="Make iOS" depends="ios.configure" if="is.osx" unless="ios.uptodate" >
         <macro-preprocess-release />
 		<macro-cocos command="compile -p ios ${build.quiet} -m release -t ${targetname} --sign-identity '${ios.sign}'" />
 		<copy todir="${app.deploy}"><fileset file="${targetname}/publish/ios/${targetname}.ipa"/></copy>
@@ -651,20 +693,25 @@ key.alias.password=${android.certificate.alias.password}
     </target>
     
     <target name="osx.configure" if="is.osx" depends="copy.resources" >
-        <echo>Updating OS X resources...</echo>
-
-        <!-- Update icons/artwork (only if newer) -->
-        <copy todir="${targetname}/frameworks/runtime-src/proj.ios_mac/mac" >
-            <fileset dir="myframeworks/mac/res">
-                <include name="**/*.icns" />
-                <include name="**/*.png" />
-                <include name="**/*.jpg" />
-                <include name="**/*.gif" />
-            </fileset>
-        </copy>
+        	<macro-uptodate targetfile="${targetname}.app/Contents/Info.plist" property="osx.uptodate" />
+    
+        <sequential unless:set="osx.uptodate">
+        
+            <echo>Updating OS X resources...</echo>
+    
+            <!-- Update icons/artwork (only if newer) -->
+            <copy todir="${targetname}/frameworks/runtime-src/proj.ios_mac/mac" >
+                <fileset dir="myframeworks/mac/res">
+                    <include name="**/*.icns" />
+                    <include name="**/*.png" />
+                    <include name="**/*.jpg" />
+                    <include name="**/*.gif" />
+                </fileset>
+            </copy>
+        </sequential>
     </target>
 
-    <target name="mac" description="Make OS X" depends="osx.configure" if="is.osx" >
+    <target name="mac" description="Make OS X" depends="osx.configure" if="is.osx" unless="osx.uptodate">
         <macro-preprocess-release />
 		<macro-cocos command="compile -p mac ${build.quiet} -m release" />
 		<copy todir="${app.deploy}/${targetname}.app"><fileset dir="${targetname}/publish/mac/${targetname} Mac.app"/></copy>
