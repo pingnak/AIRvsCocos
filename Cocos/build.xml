@@ -29,13 +29,22 @@
     basedir="."  default="web" >
 
 	<!-- 
-	    This turned out to be incompatible with builds under Windows... 
+	    The 'quiet' flag breaks builds under Windows... 
 	    
 	    If you're not building under windows, then this makes the Cocos2D output
 	    a lot less spammy.
-	<property name="build.quiet" value="" />
+
+	    However, in the Windows version, this spammy output actually makes it 
+	    work.  Things aren't synced right, but the spew slows it down enough
+	    that the problem doesn't manifest.  Otherwise you get a failed build
+	    and 'the process cannot access the file because it is being used by 
+	    another process.' error in the log.  Race condition!
+	    
+	    For people new to ant build scripts, setting a property sets it in 
+	    stone.  Any changes made later to the property don't take effect.
 	-->
-    <property name="build.quiet" value="--quiet" />
+	<property name="build.options" value="" />
+    <property name="build.options" value="--quiet" />
 
     <!-- Helpers for regular expression preprocessor -->
     <property name="rxFunc" value="(^|[\t ]+)" />
@@ -93,7 +102,7 @@
 	    <sequential>
         <uptodate targetfile="${app.deploy}/@{targetfile}" property="@{property}">
             <srcfiles dir="." includes="build.*"/>
-            <srcfiles dir="src" includes="**/*"/>
+            <srcfiles dir="${source.dir}" includes="**/*"/>
             <srcfiles dir="res" includes="**/*"/>
             <srcfiles dir="myframeworks" includes="**/*"/>
         </uptodate>
@@ -123,7 +132,7 @@
 			    <env key="NDK_ROOT" value="${NDK_ROOT}" />
 			    <env key="${os.PATH}" path="${PYTHON_ROOT}:${ANDROID_SDK_ROOT}:${COCOS_FRAMEWORKS}:${COCOS_CONSOLE_ROOT}:${os.OLDPATH}"/>
 
-                <arg line="${SHELL.c} 'cocos @{command}'" />
+                <arg line="${SHELL.c} 'cocos @{command}' ${build.options}" />
 
 			    <!-- Filter stderr, to point back at original source paths... -->
 				<redirector>
@@ -141,9 +150,8 @@
         <sequential>
             <tstamp />
             <copy todir="${targetname}/src" overwrite="true" >
-                <fileset dir="src">
+                <fileset dir="${source.dir}">
                     <include name='**/*.js'/>
-                    <include name='**/*.json'/>
                     <exclude name="main.js"/>
                 </fileset>
                 <filterchain>
@@ -152,7 +160,7 @@
                 </filterchain>
             </copy>
             <copy todir="${targetname}" overwrite="true" >
-                <fileset dir="src">
+                <fileset dir="${source.dir}">
                     <include name="main.js"/>
                     <include name='**/*.html'/>
                     <include name='**/*.css'/>
@@ -163,13 +171,18 @@
                 </filterchain>
             </copy>
 
+			<sort>
+                <fileset dir="${source.dir}" id="src.files" >
+                    <include name='**/*.js'/>
+                    <exclude name="main.js"/>
+				</fileset>
+				<name/>
+			</sort>
+            
             <!-- Generate a debug mode project.json from source files -->
-            <fileset id="src.files" dir="src">
-                <include name='**/*.js'/>
-                <exclude name="main.js"/>
-            </fileset>
-            <pathconvert property="src.filelist" refid="src.files" pathsep="${line.separator}">
+            <pathconvert refid="src.files" property="src.filelist" pathsep="${line.separator}">
                 <chainedmapper>
+					<filtermapper><replacestring from="\" to="/"/></filtermapper>
                     <regexpmapper from="^.*?/(src/.*)$" to='        "\1",' />
                 </chainedmapper>
             </pathconvert>
@@ -198,9 +211,8 @@ ${src.filelist}
         <sequential>
             <tstamp />
             <copy todir="${targetname}/src" overwrite="true" >
-                <fileset dir="src">
+                <fileset dir="${source.dir}">
                     <include name='**/*.js'/>
-                    <include name='**/*.json'/>
                     <exclude name="main.js"/>
                 </fileset>
                 <filterchain>
@@ -209,7 +221,7 @@ ${src.filelist}
                 </filterchain>
             </copy>
             <copy todir="${targetname}" overwrite="true" >
-                <fileset dir="src">
+                <fileset dir="${source.dir}">
                     <include name="main.js"/>
                     <include name='**/*.html'/>
                     <include name='**/*.css'/>
@@ -219,14 +231,18 @@ ${src.filelist}
                     &preprocess.release;
                 </filterchain>
             </copy>
+			<sort>
+                <fileset dir="${source.dir}" id="src.files" >
+                    <include name='**/*.js'/>
+                    <exclude name="main.js"/>
+				</fileset>
+				<name/>
+			</sort>
 
             <!-- Generate a release mode project.json from source files -->
-            <fileset id="src.files" dir="src">
-                <include name='**/*.js'/>
-                <exclude name="main.js"/>
-            </fileset>
-            <pathconvert property="src.filelist" refid="src.files" pathsep="${line.separator}">
+            <pathconvert refid="src.files" property="src.filelist" pathsep="${line.separator}">
                 <chainedmapper>
+					<filtermapper><replacestring from="\" to="/"/></filtermapper>
                     <regexpmapper from="^.*?/(src/.*)$" to='        "\1",' />
                 </chainedmapper>
             </pathconvert>
@@ -262,6 +278,10 @@ ${src.filelist}
             </fileset>
         </copy>            
         <pathconvert property="res.files" pathsep="${line.separator}">
+        <!-- 
+        	Wrapping with sort is a NOP, but under Windows, 'res.files' won't  
+        	be set with a naked <filset>
+        -->
         <sort>
             <fileset id="res.files" dir="res">
                 <include name='**/*'/>
@@ -274,16 +294,21 @@ ${src.filelist}
         <!-- Generate a list of paths for loader to load -->
         <pathconvert property="res.pushy" refid="res.files" pathsep="${line.separator}">
             <chainedmapper>
-                <regexpmapper from="^.*?/(res/.*$)" to='    "\1",' />
+				<filtermapper><replacestring from="\" to="/"/></filtermapper>
+				<scriptmapper language="javascript">
+                    var relpath = source.substring(source.indexOf('/res/')+1);
+                    self.addMappedName('    "'+relpath+'",');
+                </scriptmapper>
             </chainedmapper>
         </pathconvert>
         <!-- Generate a dictionary to paths - Cheat with scriptmapper! -->
         <pathconvert property="res.labeled" refid="res.files" pathsep="${line.separator}">
             <chainedmapper>
+				<filtermapper><replacestring from="\" to="/"/></filtermapper>
                 <scriptmapper language="javascript">
-                    var label = source.substring(source.indexOf('/res/')+5).replace(/[^A-Z0-9a-z]/ig,'_');
-                    var relpath = source.replace(/^.*?\/(res\/.*$)/, "$1");
-                    self.addMappedName("    "+label+': "'+relpath+'",');
+                    var relpath = source.substring(source.indexOf('/res/')+5);
+                    var label = relpath.replace(/[^A-Z0-9a-z]/ig,'_');
+                    self.addMappedName("    "+label+': "res/'+relpath+'",');
                 </scriptmapper>
             </chainedmapper>
         </pathconvert>
@@ -512,7 +537,7 @@ key.alias.password=${android.certificate.alias.password}
 
     -->    
     <target name="web.configure" depends="copy.resources" >
-        	<macro-uptodate targetfile="web/game.min.js" property="web.uptodate" />
+		<macro-uptodate targetfile="web/game.min.js" property="web.uptodate" />
 
         <sequential unless:set="web.uptodate">
 
@@ -621,25 +646,44 @@ key.alias.password=${android.certificate.alias.password}
 
     <target name="android" description="Make Android" depends="android.configure" unless="android.uptodate" >
         <macro-preprocess-release />
-        <macro-cocos command="compile -p android ${build.quiet} -m release --ndk-mode release" /> 
+        <macro-cocos command="compile -p android -m release --ndk-mode release ${android.version}" /> 
         <copy tofile="${app.deploy}/${targetname}.apk"><fileset file="${targetname}/publish/android/${targetname}-release-signed.apk"/></copy>
     </target>
 
     <target name="androiddebug" description="Make Debug Android" depends="android.configure" >
         <macro-preprocess-debug />
-		<macro-cocos command="compile -p android ${build.quiet} -m debug --ndk-mode debug" /> 
+		<macro-cocos command="compile -p android -m debug --ndk-mode debug ${android.version}" /> 
     </target>
     
-    <target name="runandroid" description="run ${build.quiet} Android" depends="android.configure" >
-        <macro-preprocess-release />
-		<macro-cocos command="run -p android ${build.quiet} -m release --ndk-mode release" />
-		<copy tofile="${app.deploy}/${targetname}.apk"><fileset file="${targetname}/publish/android/${targetname}-release-signed.apk"/></copy>
+    <target name="runandroid" description="run Android" depends="android" >
+
+    	<sequential>
+			<exec executable="${android.adb}" dir="." failonerror="false" searchpath="false" >
+				<arg line="-a uninstall ${app.id}"/>
+			</exec>
+			<exec executable="${android.adb}" dir="." failonerror="false" searchpath="false" >
+				<arg line="-a install ${app.deploy}/${targetname}.apk"/>
+			</exec>
+			<exec executable="${android.adb}" dir="." failonerror="false" searchpath="false" >
+				<arg line="-a shell monkey -p ${app.id} -c android.intent.category.LAUNCHER 1"/>
+			</exec>
+    	</sequential>
+    
     </target>
 
     <target name="debugandroid" description="Debug Android" depends="android.configure" >
-        <macro-preprocess-debug />
-		<macro-cocos command="run -p android ${build.quiet} -m debug --ndk-mode debug" /> 
-    </target>
+		<macro-preprocess-debug />
+    	<sequential>
+			<exec executable="${android.adb}" dir="." failonerror="false" searchpath="false" >
+				<arg line="-a logcat -c"/>
+			</exec>
+			<macro-cocos command="run -p android -m debug --ndk-mode debug ${android.version}" />
+			<echo>${line.separator}${line.separator}${line.separator}Trace Output${line.separator}${line.separator}${line.separator}</echo>
+			<exec executable="${android.adb}" dir="." failonerror="false" searchpath="false" >
+				<arg line="-a logcat -s AndroidRuntime" />
+			</exec>
+		</sequential>
+	</target>
     
 
     <!-- Note: You need a Mac, with XCode (from app store) for iOS/OS X. -->
@@ -664,13 +708,13 @@ key.alias.password=${android.certificate.alias.password}
     
     <target name="ios" description="Make iOS" depends="ios.configure" if="is.osx" unless="ios.uptodate" >
         <macro-preprocess-release />
-		<macro-cocos command="compile -p ios ${build.quiet} -m release -t ${targetname} --sign-identity '${ios.sign}'" />
+		<macro-cocos command="compile -p ios -m release -t ${targetname} --sign-identity '${ios.sign}'" />
 		<copy todir="${app.deploy}"><fileset file="${targetname}/publish/ios/${targetname}.ipa"/></copy>
     </target>
 
     <target name="iosdebug" description="Make Debug Mode iOS" depends="ios.configure" if="is.osx" >
         <macro-preprocess-debug />
-		<macro-cocos command="compile -p ios ${build.quiet} -m debug -t ${targetname} --sign-identity '${ios.sign}'" />
+		<macro-cocos command="compile -p ios -m debug -t ${targetname} --sign-identity '${ios.sign}'" />
     </target>
 
     <target name="runios" description="Run iOS" depends="ios" if="is.osx" >
@@ -701,7 +745,7 @@ key.alias.password=${android.certificate.alias.password}
     
     <target name="debugios" description="Debug iOS" depends="iosdebug" if="is.osx" >
         <macro-preprocess-debug />
-		<macro-cocos command="run -p ios ${build.quiet} -m debug -t ${targetname} --sign-identity '${ios.sign}'" />
+		<macro-cocos command="run -p ios -m debug -t ${targetname} --sign-identity '${ios.sign}'" />
     </target>
     
     <target name="osx.configure" if="is.osx" depends="copy.resources" >
@@ -712,7 +756,7 @@ key.alias.password=${android.certificate.alias.password}
             <echo>Updating OS X resources...</echo>
     
             <!-- Update icons/artwork (only if newer) -->
-            <copy todir="${targetname}/frameworks/runtime-src/proj.ios_mac/mac" >
+            <copy todir="${targetname}/frameworks/runtime-src/proj.ios_mac/mac" overwrite="true" >
                 <fileset dir="myframeworks/mac/res">
                     <include name="**/*.icns" />
                     <include name="**/*.png" />
@@ -725,25 +769,25 @@ key.alias.password=${android.certificate.alias.password}
 
     <target name="mac" description="Make OS X" depends="osx.configure" if="is.osx" unless="osx.uptodate">
         <macro-preprocess-release />
-		<macro-cocos command="compile -p mac ${build.quiet} -m release" />
+		<macro-cocos command="compile -p mac -m release" />
 		<copy todir="${app.deploy}/${targetname}.app"><fileset dir="${targetname}/publish/mac/${targetname} Mac.app"/></copy>
     </target>
 
     <target name="macdebug" description="Make Debug Mode OS X" depends="osx.configure" if="is.osx" >
         <macro-preprocess-debug />
-		<macro-cocos command="compile -p mac ${build.quiet} -m debug" />
+		<macro-cocos command="compile -p mac -m debug" />
 		<copy todir="${app.deploy}/${targetname}.app"><fileset dir="${targetname}/publish/mac/${targetname} Mac.app"/></copy>
     </target>
     
-    <target name="runmac" description="run ${build.quiet} OS X" depends="osx.configure" if="is.osx" >
+    <target name="runmac" description="run OS X" depends="osx.configure" if="is.osx" >
         <macro-preprocess-release />
-		<macro-cocos command="run ${build.quiet} -p mac -m release" />
+		<macro-cocos command="run -p mac -m release" />
 		<copy todir="${app.deploy}/${targetname}.app"><fileset dir="${targetname}/publish/mac/${targetname} Mac.app"/></copy>
     </target>
 
     <target name="debugmac" description="Debug OS X" depends="osx.configure" if="is.osx" >
         <macro-preprocess-debug />
-		<macro-cocos command="run ${build.quiet} -p mac -m debug" />
+		<macro-cocos command="run -p mac -m debug" />
     </target>
 
     <!-- Note: You need Linux to do Linux -->
@@ -765,42 +809,36 @@ key.alias.password=${android.certificate.alias.password}
     <!-- Linux needs to be a Debian child -->
     <target name="linux" description="Make Linux" depends="linux.configure" if="is.linux" >
         <macro-preprocess-release />
-		<macro-cocos command="compile ${build.quiet} -p linux -m release" />
+		<macro-cocos command="compile -p linux -m release" />
     </target>
 
     <target name="linuxdebug" description="Make Debug Mode Linux" depends="linux.configure" if="is.linux" >
         <macro-preprocess-debug />
-		<macro-cocos command="compile ${build.quiet} -p linux -m debug" />
+		<macro-cocos command="compile -p linux -m debug" />
     </target>
     
-    <target name="runlinux" description="run ${build.quiet} Linux" depends="linux.configure" if="is.linux" >
+    <target name="runlinux" description="run Linux" depends="linux.configure" if="is.linux" >
         <macro-preprocess-release />
-		<macro-cocos command="run ${build.quiet} -p linux -m release" />
+		<macro-cocos command="run -p linux -m release" />
     </target>
 	
     <target name="debuglinux" description="Debug Linux" depends="linux.configure" if="is.linux" >
         <macro-preprocess-debug />
-		<macro-cocos command="run ${build.quiet} -p linux -m debug" />
+		<macro-cocos command="run -p linux -m debug" />
     </target>
     
     <!-- Note: You need Windows and Visual Studio to build a Windows target -->
 
     <target name="windows.configure" if="is.windows" depends="copy.resources" >
-        <echo>Updating Windows resources...</echo>
-		
-        <copy todir="myframeworks/win32/res" >
-            <fileset dir="${targetname}/frameworks/runtime-src/proj.win32">
-                <include name="**/*.ico" />
-                <include name="**/*.png" />
-                <include name="**/*.jpg" />
-                <include name="**/*.gif" />
-            </fileset>
-        </copy>
-        
+		<macro-uptodate targetfile="win32/Example.exe" property="windows.uptodate" />
+
+        <sequential unless:set="windows.uptodate">
+			<echo>Updating Windows resources...</echo>
+			<copy file="myframeworks/win32/res/game.ico" tofile="${targetname}/frameworks/runtime-src/proj.win32/res/game.ico" overwrite="true" />
+		</sequential>
     </target>
 
-    <!-- ${build.quiet} breaks windows build -->
-    <target name="win32" description="Make Windows" depends="windows.configure" if="is.windows" >
+    <target name="win32" description="Make Windows" depends="windows.configure" if="is.windows" unless="windows.uptodate" >
         <macro-preprocess-release />
 		<macro-cocos command="compile -p win32 -m release" />
 		<copy todir="${app.deploy}/win32"><fileset dir="${targetname}/publish/win32"/></copy>
@@ -820,7 +858,7 @@ key.alias.password=${android.certificate.alias.password}
     
     <target name="debugwin32" description="Debug Windows" depends="windows.configure" if="is.windows" >
         <macro-preprocess-debug />
-		<macro-cocos command="run ${build.quiet} -p win32 -m debug" />
+		<macro-cocos command="run -p win32 -m debug" />
     </target>
 
     <target name="win8.1.configure" if="is.windows" depends="copy.resources" >
@@ -881,7 +919,7 @@ key.alias.password=${android.certificate.alias.password}
 
     
     <!-- Hint: Remove unwanted projects from 'depends=' -->
-    <target name="all" description="Make all release targets" depends="web,android,ios,mac,linux,win32,win8.1,wp8" >
+    <target name="all" description="Make all release targets" depends="web,android,ios,mac,linux,win32" > <!--,win8.1,wp8-->
         
     </target>
     

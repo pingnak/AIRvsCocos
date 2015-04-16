@@ -158,8 +158,10 @@ GNU.TAIL=tail
 			
             <!-- Launch android manager, to download more -->
             <echo>Finish configuring Android SDK.</echo>
-            <exec executable="${basedir}/${depends}/${windows.androidsdk.unpacked}/SDK Manager.exe" searchpath="true" spawn="true" />
-            <exec executable="${basedir}/${depends}/${windows.androidsdk.unpacked}/AVD Manager.exe" searchpath="true" spawn="true" />
+			<exec executable="cmd" dir="${basedir}/${depends}/${windows.androidsdk.unpacked}/tools" spawn="true" >
+				<arg line="/c android.bat" />
+			</exec>
+			<exec executable="${basedir}/${depends}/${windows.androidsdk.unpacked}/AVD Manager.exe" spawn="true" />
         </sequential>
     </target>
     
