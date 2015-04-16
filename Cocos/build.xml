@@ -544,7 +544,7 @@ key.alias.password=${android.certificate.alias.password}
             <echo>Updating web resources...</echo>
     
             <!-- Keep strays from being left in res or src -->
-            <delete includeemptydirs="true">
+            <delete includeemptydirs="true" quiet="true" >
                 <fileset dir="${app.deploy}/web" includes="**/*"/>
             </delete>
             
