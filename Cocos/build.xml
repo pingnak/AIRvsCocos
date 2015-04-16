@@ -341,6 +341,9 @@ ${res.labeled}
 # We can just rebuild it, so it's tens of thousands of files of boilerplatr and  
 # intermediate files with a few minor tweaks scattered among them.
 ${targetname}
+# Excluding this from git, because it's just generated for this project.
+# If you're sharing with team mates, you probably don't want to exclude it.
+${app.deploy}
 </echo>
 
         <!-- Have cocos make the project -->
