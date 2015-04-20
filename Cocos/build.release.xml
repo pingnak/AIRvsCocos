@@ -1,6 +1,36 @@
 
 <!-- Release build preprocessing stage -->
 
+<!-- Eat debug assertion -->
+<replaceregex flags=""
+    pattern="${rxFunc}assert${rxArg}"
+    replace="\1//assert(\2);"/>
+
+<!-- Eat Debug breakpoint -->
+<replaceregex flags=""
+    pattern="${rxFunc}throwassert${rxArg}"
+    replace="\1//throwassert();"/>  
+    
+<!-- Eat Debug trace -->
+<replaceregex flags=""
+    pattern="${rxFunc}trace${rxArg}"
+    replace="\1//trace(\2*);"/>
+    
+<!-- log -->
+<replaceregex flags="g"
+    pattern="${rxFunc}log${rxArg}" 
+    replace="\1cc.log(\2)"/>
+
+<!-- logerror -->
+<replaceregex flags="g"
+    pattern="${rxFunc}logerror${rxArg}" 
+    replace="\1cc.error('ERROR:\n',\2);"/>
+
+<!-- Build timestamp is our build version -->
+<replacestring
+    from="${APP_TIMESTAMP}" 
+    to="${DSTAMP}.${TSTAMP}"/> 
+
 <replaceregex flags=""
     pattern="${rxFunc}CONFIG::FORRELEASE${rxParens}"
     replace="\2"/>  <!-- CONFIG::FORRELEASE(statement) -->
@@ -17,7 +47,10 @@
     pattern="${rxFunc}CONFIG::RELEASEELSE${rxFirstArg}${rxLastArg}"
     replace="\2"/>    <!-- CONFIG::DEBUGELSE(release,debug) -->
 
-<!-- These two multiline conditional code blocks will spoil line counts -->
+<!-- 
+    These multiline conditional code blocks will spoil line counts
+    Where possible, use at the bottom of the file.
+-->
 <replaceregex flags="gis" byline="false"
     pattern="CONFIG::RELEASE*(.+?)CONFIG::ENDRELEASE" 
     replace="\1"/>  <!-- Code block for release (ignores contained comments) -->
@@ -25,16 +58,8 @@
 <replaceregex flags="gis" byline="false"
     pattern="CONFIG::DEBUG*(.+?)CONFIG::ENDDEBUG" 
     replace=""/>    <!-- Code block for debug (ignores contained comments) -->
-    
-<replaceregex flags=""
-    pattern="${rxFunc}assert${rxArg}"
-    replace="\1//assert(\2);"/>     <!-- Debug assertion -->
 
-<replaceregex flags=""
-    pattern="${rxFunc}throwassert${rxArg}"
-    replace="\1//throwassert();"/>  <!-- Debug breakpoint -->
-    
-<replaceregex flags=""
-    pattern="${rxFunc}trace${rxArg}"
-    replace="\1//trace(\2*);"/>     <!-- Debug trace -->
+<replaceregex flags="gis" byline="false"
+    pattern="CONFIG::DIKEOUT*(.+?)CONFIG::ENDDIKEOUT" 
+    replace=""/>                <!-- Eat a big block of code -->
     
