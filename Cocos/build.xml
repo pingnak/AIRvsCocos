@@ -38,9 +38,13 @@
 	    that the problem doesn't manifest.  Otherwise you get a failed build
 	    and 'the process cannot access the file because it is being used by 
 	    another process.' error in the log.  Race condition!
+
+	    Similarly, if you have trouble running the release web app, try  
+	    removing the 'advanced' flag from the release build.
 	    
 	    For people new to ant build scripts, setting a property sets it in 
 	    stone.  Any changes made later to the property don't take effect.
+	    
 	-->
 	<property name="build.options" value="" />
     <property name="build.options" value="--quiet" />

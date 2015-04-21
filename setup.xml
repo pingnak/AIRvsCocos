@@ -318,8 +318,8 @@ GNU.TAIL=tail
         -->
        
         <parallel threadCount="2">
+
         <sequential>
-            
             <get dest="${depends}" skipexisting="true" ignoreerrors="false" >
                 <url url="${linux.androidsdk.url}"/>
             </get>
@@ -327,37 +327,32 @@ GNU.TAIL=tail
                 <arg line="zxf '${depends}/${linux.androidsdk.filename}' -C '${depends}'" />
             </exec>
             <echo>${linux.androidsdk.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
-
         </sequential>
+
         <sequential>
-        
             <get dest="${depends}" skipexisting="true" ignoreerrors="false"  >
                 <url url="${cocos2d.url}"/>
             </get>
-
             <exec executable="unzip" failonerror="true"  >
                 <arg line="-o -d '${depends}' '${depends}/${cocos2d.filename}'" />
             </exec>
-
             <echo>${cocos2d.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
-
         </sequential>
+
         <sequential>
-            
             <get dest="${depends}" skipexisting="true" ignoreerrors="false" >
                 <url url="${linux.androidndk.url}"/>
             </get>
             <!-- Evil, self-extracting executable for ndk -->
-            <exec executable="sh" dir="${depends}" failonerror="true"  >
-                <arg line="-c 'chmod +x ${linux.androidndk.filename}'" />
+            <exec executable="sh" dir="${depends}" failonerror="true" searchpath="true" >
+                <arg line="-c 'chmod +x ./${linux.androidndk.filename}'" />
             </exec>
-            <exec executable="sh" dir="${depends}" failonerror="true"  >
-                <arg line="-c './${linux.androidndk.filename} -y'" />
+            <exec executable="sh" dir="${depends}" failonerror="true" searchpath="true" >
+                <arg line="-c '7z x ${linux.androidndk.filename}'" />
+                <!--<arg line="-c 'chmod +x ./${linux.androidndk.filename}; ./${linux.androidndk.filename} -y'" />-->
             </exec>
             <echo>${linux.androidndk.filename} extracted.  If you're stuck, a download is probably still going on.</echo>
-
         </sequential>
-
         </parallel>
 
 
