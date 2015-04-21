@@ -90,8 +90,8 @@
             <not><os family="mac"/></not>
         </and>
     </condition>
-    
-    <!-- Configure Path vs PATH, bexause exec task has long-standing bug with PATH -->
+
+    <!-- Configure Path vs PATH, because exec task has long-standing bug with PATH -->
     <property if:set="is.windows" name="os.PATH" value="Path" />
     <property if:set="is.windows" name="os.OLDPATH" value="${env.Path}" />
     <property unless:set="is.windows" name="os.PATH" value="PATH" />
@@ -107,7 +107,7 @@
             <srcfiles dir="." includes="build.*"/>
             <srcfiles dir="${APP_SOURCE_DIR}" includes="**/*"/>
             <srcfiles dir="res" includes="**/*"/>
-            <srcfiles dir="myframeworks" includes="**/*"/>
+            <srcfiles dir="${APP_FRAMEWORKS_DIR}" includes="**/*"/>
         </uptodate>
         </sequential>
 	</macrodef>
@@ -334,17 +334,23 @@ ${res.labeled}
 </echo>
     </sequential>
     </macrodef>
-	
+    
 	<!--
 	    Caution: Re-running 'ant init' will be potentially destructive to any 
 	    existing changes that you were forced to make in XCode, and maybe other
 	    things.
 	    
 	    Have your icons and such under version control, if you run this again.
+	    
+	    It may be profitable to have xcode running when you do this to re-init, 
+	    as it should overwrite the 'correct' settings when it saves...
 	-->
     <target name="init" description="Initialize/Re-initialize Cocos2D-js Project" >
         <echo>Initializing Project with Cocos</echo>
 
+        <!-- Nuke the folder, if it already exists -->
+        <delete dir="${APP_TARGETNAME}" includeemptydirs="true" quiet="true" />
+        
         <!-- Have git ignore most of this stuff. -->
 <echo file=".gitignore" append="false">#Cocos2d-js boilerplate
 # Foresake all of Cocos2d's project tree from version control.
@@ -382,7 +388,7 @@ ${APP_DEPLOY_DIR}
 
             Anyway, fixing the file names in this ONE PLACE cures the source of 
             that cancer.
-            
+
         -->
         <replaceregexp match="${APP_TARGETNAME} iOS" replace="${APP_TARGETNAME}" flags="g" byline="true">
             <fileset file="${APP_TARGETNAME}/frameworks/runtime-src/proj.ios_mac/Example.xcodeproj/project.pbxproj" />
@@ -416,33 +422,30 @@ key.alias.password=${android.certificate.alias.password}
     
     It would be nice if ant offered a 'comment' task.
 -->
-<echo level="debug"><![CDATA[
+
         <!-- 
-            This is what I used to extract the resources.
+            Grab icons that don't exist in container
         -->
 
         <!-- Make copy of project web base64 encoded images (only if newer) -->
-        <copy todir="myframeworks/web" >
+        <available file="${APP_FRAMEWORKS_DIR}/web/Base64Images.js" property="init_exists_Base64Images.js"/>
+        <copy unless:set="init_exists_Base64Images.js" todir="${APP_FRAMEWORKS_DIR}/web" preservelastmodified="true" >
             <fileset dir="${APP_TARGETNAME}/frameworks/cocos2d-html5">
                 <include name="Base64Images.js" />
             </fileset>
         </copy>
         
         <!-- Make copy of project AndroidManifest.xml (only if newer) -->
-        <copy todir="myframeworks/android" >
+        <available file="${APP_FRAMEWORKS_DIR}/android/AndroidManifest.xml" property="init_exists_AndroidManifest.xml"/>
+        <copy unless:set="init_exists_AndroidManifest.xml" todir="${APP_FRAMEWORKS_DIR}/android" preservelastmodified="true" >
             <fileset dir="${APP_TARGETNAME}/frameworks/runtime-src/proj.android/">
                 <include name="AndroidManifest.xml" />
             </fileset>
-            <filterchain>
-                &preprocess.common;
-                <replaceregex flags="g"
-                    pattern="ANDROID::VERSION" 
-                    replace="${android.version}"/>
-            </filterchain>
         </copy>
 
         <!-- Make copy of Android icons/artwork (only if newer) -->
-        <copy todir="myframeworks/android/res" >
+        <available file="${APP_FRAMEWORKS_DIR}/android/res/drawable-ldpi/icon.png" property="init_exists_icon.png"/>
+        <copy unless:set="init_exists_icon.png" todir="${APP_FRAMEWORKS_DIR}/android/res" preservelastmodified="true" >
             <fileset dir="${APP_TARGETNAME}/frameworks/runtime-src/proj.android/res">
                 <include name="**/*.png" />
                 <include name="**/*.jpg" />
@@ -451,7 +454,8 @@ key.alias.password=${android.certificate.alias.password}
         </copy>
 
         <!-- Make copy of iOS icons/artwork (only if newer) -->
-        <copy todir="myframeworks/ios/res" >
+        <available file="${APP_FRAMEWORKS_DIR}/ios/res/Icon-29.png" property="init_exists_Icon-29.png"/>
+        <copy unless:set="init_exists_Icon-29.png" todir="${APP_FRAMEWORKS_DIR}/ios/res" preservelastmodified="true" >
             <fileset dir="${APP_TARGETNAME}/frameworks/runtime-src/proj.ios_mac/ios">
                 <include name="**/*.png" />
                 <include name="**/*.jpg" />
@@ -460,7 +464,8 @@ key.alias.password=${android.certificate.alias.password}
         </copy>
 
         <!-- Make copy of Mac icons/artwork (only if newer) -->
-        <copy todir="myframeworks/mac/res" >
+        <available file="${APP_FRAMEWORKS_DIR}/mac/res/icon.icns" property="init_exists_icon.icns"/>
+        <copy unless:set="init_exists_icon.icns" todir="${APP_FRAMEWORKS_DIR}/mac/res" preservelastmodified="true" >
             <fileset dir="${APP_TARGETNAME}/frameworks/runtime-src/proj.ios_mac/mac">
                 <include name="**/*.icns" />
                 <include name="**/*.png" />
@@ -470,7 +475,8 @@ key.alias.password=${android.certificate.alias.password}
         </copy>
         
         <!-- Make copy of Linux icons/artwork (only if newer) -->
-        <copy todir="myframeworks/linux/res" >
+        <available file="${APP_FRAMEWORKS_DIR}/linux/res/icon.png" property="init_exists_icon.png"/>
+        <copy unless:set="init_exists_icon.png" todir="${APP_FRAMEWORKS_DIR}/linux/res" preservelastmodified="true" >
             <fileset dir="${APP_TARGETNAME}/frameworks/runtime-src/proj.linux">
                 <include name="**/*.png" />
                 <include name="**/*.jpg" />
@@ -479,7 +485,8 @@ key.alias.password=${android.certificate.alias.password}
         </copy>
 
         <!-- Make copy of Windows icons/artwork (only if newer) -->
-        <copy todir="myframeworks/win32/res" >
+        <available file="${APP_FRAMEWORKS_DIR}/win32/res/game.ico" property="init_exists_game.ico"/>
+        <copy unless:set="init_exists_game.ico" todir="${APP_FRAMEWORKS_DIR}/win32/res" preservelastmodified="true" >
             <fileset dir="${APP_TARGETNAME}/frameworks/runtime-src/proj.win32">
                 <include name="**/*.ico" />
                 <include name="**/*.png" />
@@ -489,7 +496,8 @@ key.alias.password=${android.certificate.alias.password}
         </copy>
         
         <!-- Make copy of Windows 8.1 icons/artwork (only if newer) -->
-        <copy todir="myframeworks/win8.1/res" >
+        <available file="${APP_FRAMEWORKS_DIR}/win8.1/res/App.Windows/Assets/Logo.scale-100.png" property="init_exists_Logo.scale-100.png"/>
+        <copy unless:set="init_exists_Logo.scale-100.png" todir="${APP_FRAMEWORKS_DIR}/win8.1/res" preservelastmodified="true" >
             <fileset dir="${APP_TARGETNAME}/frameworks/runtime-src/proj.win8.1-universal">
                 <include name="**/*.png" />
                 <include name="**/*.jpg" />
@@ -498,18 +506,33 @@ key.alias.password=${android.certificate.alias.password}
         </copy>
 
         <!-- Make copy of Windows Phone 8 icons/artwork (only if newer) -->
-        <copy todir="myframeworks/wp8/res" >
+        <available file="${APP_FRAMEWORKS_DIR}/wp8/res/App/Assets/SplashScreenImage.jpg" property="init_exists_SplashScreenImage.jpg"/>
+        <copy unless:set="init_exists_SplashScreenImage.jpg" todir="${APP_FRAMEWORKS_DIR}/wp8/res" preservelastmodified="true" >
             <fileset dir="${APP_TARGETNAME}/frameworks/runtime-src/proj.wp8-xaml">
                 <include name="**/*.png" />
                 <include name="**/*.jpg" />
                 <include name="**/*.gif" />
             </fileset>
         </copy>
-]]></echo>
     
         <!-- Make the deployment folder -->
         <mkdir dir="${APP_DEPLOY_DIR}"/>
 
+        <echo if:set="is.osx">
+Now that we've done that, be sure to verify settings in XCODE for OSX/iOS.
+
+Open ${APP_TARGETNAME}/frameworks/runtime-src/proj.ios_mac/${APP_TARGETNAME}.xcodeproj
+
+Click on the top-level '${APP_TARGETNAME}' on the project tree.
+
+Check 'General' tab, for the 'Team' 
+
+Under 'Build Settings', check 'Code Signing'
+
+Re-do whatever else you may have touched in there. 
+
+Let it finish its 'busy' status.
+</echo>
     </target>
 
 
@@ -566,14 +589,14 @@ key.alias.password=${android.certificate.alias.password}
             
             <!-- Copy the artwork back -->
             <copy todir="${APP_TARGETNAME}/frameworks/cocos2d-html5" >
-                <fileset dir="myframeworks/web">
+                <fileset dir="${APP_FRAMEWORKS_DIR}/web">
                     <include name="Base64Images.js" />
                 </fileset>
             </copy>
 
             <!-- Copy icon file to root of web site -->
             <copy todir="${APP_TARGETNAME}" >
-                <fileset dir="myframeworks/web">
+                <fileset dir="${APP_FRAMEWORKS_DIR}/web">
                     <include name="favicon.ico" />
                 </fileset>
             </copy>
@@ -678,7 +701,7 @@ key.alias.password=${android.certificate.alias.password}
 
             <!-- Update AndroidManifest.xml (only if newer) -->
             <copy todir="${APP_TARGETNAME}/frameworks/runtime-src/proj.android" overwrite="true" >
-                <fileset dir="myframeworks/android/">
+                <fileset dir="${APP_FRAMEWORKS_DIR}/android/">
                     <include name="AndroidManifest.xml" />
                 </fileset>
                 <filterset begintoken="${" endtoken="}" recurse="true" >
@@ -689,7 +712,7 @@ key.alias.password=${android.certificate.alias.password}
     
             <!-- Update Android icons/artwork (only if newer) -->
             <copy todir="${APP_TARGETNAME}/frameworks/runtime-src/proj.android/res" overwrite="true" >
-                <fileset dir="myframeworks/android/res">
+                <fileset dir="${APP_FRAMEWORKS_DIR}/android/res">
                     <include name="**/*.png" />
                     <include name="**/*.jpg" />
                     <include name="**/*.gif" />
@@ -752,7 +775,7 @@ key.alias.password=${android.certificate.alias.password}
     
             <!-- Update icons/artwork (only if newer) -->
             <copy todir="${APP_TARGETNAME}/frameworks/runtime-src/proj.ios_mac/ios" >
-                <fileset dir="myframeworks/ios/res">
+                <fileset dir="${APP_FRAMEWORKS_DIR}/ios/res">
                     <include name="**/*.png" />
                     <include name="**/*.jpg" />
                     <include name="**/*.gif" />
@@ -814,7 +837,7 @@ key.alias.password=${android.certificate.alias.password}
     
             <!-- Update icons/artwork (only if newer) -->
             <copy todir="${APP_TARGETNAME}/frameworks/runtime-src/proj.ios_mac/mac" overwrite="true" >
-                <fileset dir="myframeworks/mac/res">
+                <fileset dir="${APP_FRAMEWORKS_DIR}/mac/res">
                     <include name="**/*.icns" />
                     <include name="**/*.png" />
                     <include name="**/*.jpg" />
@@ -853,9 +876,9 @@ key.alias.password=${android.certificate.alias.password}
         <copy.resources/>
 
         <!-- Update Linux icons/artwork (only if newer) -->
-        <mkdir dir="myframeworks/linux/res" />
+        <mkdir dir="${APP_FRAMEWORKS_DIR}/linux/res" />
         <copy todir="${APP_TARGETNAME}/frameworks/runtime-src/proj.linux" >
-            <fileset dir="myframeworks/linux/res">
+            <fileset dir="${APP_FRAMEWORKS_DIR}/linux/res">
                 <include name="**/*.png" />
                 <include name="**/*.jpg" />
                 <include name="**/*.gif" />
@@ -893,7 +916,7 @@ key.alias.password=${android.certificate.alias.password}
         <sequential unless:set="windows.uptodate">
 			<echo>Updating Windows resources...</echo>
             <copy.resources/>
-			<copy file="myframeworks/win32/res/game.ico" tofile="${APP_TARGETNAME}/frameworks/runtime-src/proj.win32/res/game.ico" overwrite="true" />
+			<copy file="${APP_FRAMEWORKS_DIR}/win32/res/game.ico" tofile="${APP_TARGETNAME}/frameworks/runtime-src/proj.win32/res/game.ico" overwrite="true" />
 		</sequential>
     </target>
 
@@ -924,7 +947,7 @@ key.alias.password=${android.certificate.alias.password}
         <echo>Updating Win8.1 resources...</echo>
 		
         <copy.resources/>
-        <copy todir="myframeworks/win8.1/res" >
+        <copy todir="${APP_FRAMEWORKS_DIR}/win8.1/res" >
             <fileset dir="${APP_TARGETNAME}/frameworks/runtime-src/proj.win8.1-universal">
                 <include name="**/*.png" />
                 <include name="**/*.jpg" />
@@ -952,7 +975,7 @@ key.alias.password=${android.certificate.alias.password}
     <target name="wp8.configure" if="is.windows" >
         <echo>Updating Wp8 resources...</echo>
         <copy.resources/>
-        <copy todir="myframeworks/wp8/res" >
+        <copy todir="${APP_FRAMEWORKS_DIR}/wp8/res" >
             <fileset dir="${APP_TARGETNAME}/frameworks/runtime-src/proj.wp8-xaml">
                 <include name="**/*.png" />
                 <include name="**/*.jpg" />
@@ -977,7 +1000,7 @@ key.alias.password=${android.certificate.alias.password}
 		<macro-cocos command="run -p wp8 -m debug" />
     </target>
 
-    
+   
     <!-- Hint: Remove unwanted projects from 'depends=' -->
     <target name="all" description="Make all release targets" depends="web,android,ios,mac,linux,win32" > <!--,win8.1,wp8-->
         
