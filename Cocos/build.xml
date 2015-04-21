@@ -42,8 +42,8 @@
 	    For people new to ant build scripts, setting a property sets it in 
 	    stone.  Any changes made later to the property don't take effect.
 	-->
-	<property name="build.options" value="--subprojects" />
-    <property name="build.options" value="--subprojects --quiet" />
+	<property name="build.options" value="" />
+    <property name="build.options" value="--quiet" />
 
     <!-- Helpers for regular expression preprocessor -->
     <property name="rxFunc" value="(^|[\t ]+)" />
