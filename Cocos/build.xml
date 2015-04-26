@@ -600,6 +600,23 @@ Let it finish its 'busy' status.
                     <include name="favicon.ico" />
                 </fileset>
             </copy>
+
+            <!-- Copy icon folder to root of web site -->
+            <mkdir dir="${APP_TARGETNAME}/icons" />
+            <copy todir="${APP_TARGETNAME}/icons" >
+                <fileset dir="${APP_FRAMEWORKS_DIR}/web/icons">
+                    <include name="**/*" />
+                </fileset>
+            </copy>
+
+            <!-- Copy 'web app' manifest(s) -->
+            <copy todir="${APP_TARGETNAME}" overwrite="true" >
+                <fileset dir="${APP_FRAMEWORKS_DIR}/web">
+                    <include name='*.xml'/>
+                    <include name='*.json'/>
+                </fileset>
+                <filterset refid="preprocess-constants" />
+            </copy>
             
         </sequential>
     </target>
@@ -622,6 +639,23 @@ Let it finish its 'busy' status.
                 <include name="*.json" />
                 <include name="favicon.ico" />
             </fileset>
+        </copy>
+        
+        <!-- Copy icon folder to root of web site -->
+        <mkdir dir="${APP_DEPLOY_DIR}/web/icons" />
+        <copy todir="${APP_DEPLOY_DIR}/web/icons" >
+            <fileset dir="${APP_FRAMEWORKS_DIR}/web/icons">
+                <include name="**/*" />
+            </fileset>
+        </copy>
+
+        <!-- Copy 'web app' manifest(s) -->
+        <copy todir="${APP_DEPLOY_DIR}/web" overwrite="true" >
+            <fileset dir="${APP_FRAMEWORKS_DIR}/web">
+                <include name='*.xml'/>
+                <include name='*.json'/>
+            </fileset>
+            <filterset refid="preprocess-constants" />
         </copy>
     </target>
 
@@ -668,6 +702,23 @@ Let it finish its 'busy' status.
             <fileset dir="${APP_TARGETNAME}/frameworks/cocos2d-html5" >
                 <include name="**/*" />
             </fileset>
+        </copy>
+        
+        <!-- Copy icon folder to root of web site -->
+        <mkdir dir="${APP_DEPLOY_DIR}/webdebug/icons" />
+        <copy todir="${APP_DEPLOY_DIR}/webdebug/icons" >
+            <fileset dir="${APP_FRAMEWORKS_DIR}/web/icons">
+                <include name="**/*" />
+            </fileset>
+        </copy>
+
+        <!-- Copy 'web app' manifest(s) -->
+        <copy todir="${APP_DEPLOY_DIR}/web" overwrite="true" >
+            <fileset dir="${APP_FRAMEWORKS_DIR}/web">
+                <include name='*.xml'/>
+                <include name='*.json'/>
+            </fileset>
+            <filterset refid="preprocess-constants" />
         </copy>
 
     </target>
@@ -954,7 +1005,7 @@ Let it finish its 'busy' status.
                 <include name="**/*.gif" />
             </fileset>
         </copy>
-        
+
     </target>
 
     <target name="win8.1" description="Make Win8.1" depends="win8.1.configure" if="is.windows" >

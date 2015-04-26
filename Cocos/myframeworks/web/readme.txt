@@ -30,4 +30,14 @@ certutil -decode src.txt dst.png
 
 There are various 'online' encoder/decoders, too.  Google it.
 
+## icons
+
+Dumping ground for various web icons
+
+## manifest.json
+
+Manifest file for web apps
+
+http://www.w3.org/TR/appmanifest/
+
 

@@ -8,35 +8,48 @@ Package: ${APP_PACKAGE_ID}
 <head>
     <!-- Tab title -->
     <title>${APP_TITLE}</title>
-
-    <!-- Our default web icon -->
-    <link rel="icon" type="image/x-icon" href="favicon.ico" />
-
+    
     <meta content="utf-8" http-equiv="encoding">
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
     <meta NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
+    <!-- Our default web icon -->
+    <link rel="icon" type="image/png" href="icons/favicon16.png" sizes="16x16" />
+    <link rel="icon" type="image/png" href="icons/favicon32.png" sizes="24x24" />
+    <link rel="icon" type="image/png" href="icons/favicon32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="icons/favicon48.png" sizes="48x48" />
+    <link rel="icon" type="image/png" href="icons/favicon64.png" sizes="64x64" />
+    <!-- It's probably pointless to be THIS backwardly compatible -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico" sizes="16x16 24x24 32x32 64x64" />
+
+    <!-- For iPhone 4 Retina display: -->
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="icons/apple-touch-icon-114x114-precomposed.png" />
+    
+    <!-- For iPad: -->
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="icons/apple-touch-icon-72x72-precomposed.png" />
+    
+    <!-- For iPhone: -->
+    <link rel="apple-touch-icon-precomposed" href="icons/apple-touch-icon-57x57-precomposed.png" />
+    
+    <!-- For Windows 8: -->
+    <meta name="msapplication-TileColor" content="#002000" />
+    <meta name="msapplication-TileImage" content="icons/win8-pinned.png" />
+    
     <!-- IE evil http://technet.microsoft.com/en-us/library/dn321432.aspx -->
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 
     <!-- iOS evil https://developer.apple.com/library/ios/documentation/AppleApplications/Reference/SafariWebContent/ConfiguringWebApplications/ConfiguringWebApplications.html -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="screen-orientation" content="${APP_ORIENTATION}"/>
-    <meta name="full-screen" content="yes"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="screen-orientation" content="${APP_ORIENTATION}" />
+    <meta name="full-screen" content="yes" />
 
-    <!-- Android + iOS evil  -->
+    <!-- Android + iOS evil -->
     <meta name="mobile-web-app-capable" content="yes">
 
-    <!-- Android/Mozilla/Chrome evil: Manifest for 'web app' 
-        https://developer.mozilla.org/en-US/Apps/Build/Manifest
-        https://developer.chrome.com/extensions/manifest
-    -->
-    <link rel="manifest" href="/manifest.json">
-    
-    <!-- Miscellaneous evil -->
-    <meta name="x5-fullscreen" content="true"/>
-    <meta name="360-fullscreen" content="true"/>
+    <!-- Manifest for installable 'web app' http://www.w3.org/TR/appmanifest -->
+    <link rel="manifest" href="manifest.json">
     
     <style>
         body, canvas, div {

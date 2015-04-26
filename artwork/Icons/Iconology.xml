@@ -17,13 +17,19 @@
         <icon name="favicon16.png" size="16"/>
         <icon name="favicon24.png" size="24"/>
         <icon name="favicon32.png" size="32"/>
+        <icon name="favicon48.png" size="48"/>
         <icon name="favicon64.png" size="64"/>
-        <icon name="pinned.png" size="144"/>
+        <icon name="favicon72.png" size="72" />
+        <icon name="favicon96.png" size="96" />
+        <icon name="favicon144.png" size="144" />
+        <icon name="favicon192.png" size="192" />
+        <!-- Stupid-big web app icon -->
+        <icon name="favicon512.png" size="512" />
+        <icon name="win8-pinned.png" size="144"/>
         <icon name="apple-touch-icon-72x72-precomposed.png" size="72"/>
         <icon name="apple-touch-icon-120x120-precomposed.png" size="120" />
         <icon name="apple-touch-icon-152x152-precomposed.png" size="152"/>
-        <icon name="favicon-coast.png" size="228"/>
-       
+        
         <echo file=""><![CDATA[<!-- From Iconology.xml -->
 
 <!-- Standard Favicon -->
@@ -39,7 +45,7 @@
 <link rel="apple-touch-icon-precomposed" href="apple-touch-icon-57x57-precomposed.png">
 
 <!-- For Windows 8: -->
-<meta name="msapplication-TileImage" content=“pinned.png”>
+<meta name="msapplication-TileImage" content=“win8-pinned.png”>
 <meta name="msapplication-TileColor" content="#ef0303”>
 
 <!-- For Opera Coast: -->  
