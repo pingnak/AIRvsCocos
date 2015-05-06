@@ -391,7 +391,7 @@ ${APP_DEPLOY_DIR}
 
         -->
         <replaceregexp match="${APP_TARGETNAME} iOS" replace="${APP_TARGETNAME}" flags="g" byline="true">
-            <fileset file="${APP_TARGETNAME}/frameworks/runtime-src/proj.ios_mac/Example.xcodeproj/project.pbxproj" />
+            <fileset file="${APP_TARGETNAME}/frameworks/runtime-src/proj.ios_mac/${APP_TARGETNAME}.xcodeproj/project.pbxproj" />
         </replaceregexp>
 
 
@@ -399,6 +399,10 @@ ${APP_DEPLOY_DIR}
     <pathelement path="${android.certificate}" />
 </path>
 <pathconvert targetos="unix" property="android.cert.unix" refid="android.cert.DOS"/>
+
+<echo>
+${APP_TARGETNAME}/frameworks/runtime-src/proj.android/ant.properties
+</echo>
 <echo file="${APP_TARGETNAME}/frameworks/runtime-src/proj.android/ant.properties" append="true" >
 # Tack on keystore data, as cocos would have made you type it in. Very manually.
 # Note: This is stored in the clear, where it could find its way into version 
@@ -962,7 +966,7 @@ Let it finish its 'busy' status.
     <!-- Note: You need Windows and Visual Studio to build a Windows target -->
 
     <target name="windows.configure" if="is.windows"  >
-		<macro-uptodate targetfile="win32/Example.exe" property="windows.uptodate" />
+		<macro-uptodate targetfile="win32/${APP_TARGETNAME}.exe" property="windows.uptodate" />
 
         <sequential unless:set="windows.uptodate">
 			<echo>Updating Windows resources...</echo>
