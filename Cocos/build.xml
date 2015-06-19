@@ -508,16 +508,6 @@ key.alias.password=${android.certificate.alias.password}
                 <include name="**/*.gif" />
             </fileset>
         </copy>
-
-        <!-- Make copy of Windows Phone 8 icons/artwork (only if newer) -->
-        <available file="${APP_FRAMEWORKS_DIR}/wp8/res/App/Assets/SplashScreenImage.jpg" property="init_exists_SplashScreenImage.jpg"/>
-        <copy unless:set="init_exists_SplashScreenImage.jpg" todir="${APP_FRAMEWORKS_DIR}/wp8/res" preservelastmodified="true" >
-            <fileset dir="${APP_TARGETNAME}/frameworks/runtime-src/proj.wp8-xaml">
-                <include name="**/*.png" />
-                <include name="**/*.jpg" />
-                <include name="**/*.gif" />
-            </fileset>
-        </copy>
     
         <!-- Make the deployment folder -->
         <mkdir dir="${APP_DEPLOY_DIR}"/>
@@ -1027,37 +1017,9 @@ Let it finish its 'busy' status.
 		<macro-cocos command="run -p wp8_1 -m debug" />
     </target>
     
-    <target name="wp8.configure" if="is.windows" >
-        <echo>Updating Wp8 resources...</echo>
-        <copy.resources/>
-        <copy todir="${APP_FRAMEWORKS_DIR}/wp8/res" >
-            <fileset dir="${APP_TARGETNAME}/frameworks/runtime-src/proj.wp8-xaml">
-                <include name="**/*.png" />
-                <include name="**/*.jpg" />
-                <include name="**/*.gif" />
-            </fileset>
-        </copy>
-        
-    </target>
-
-    <target name="wp8" description="Make Wp8" depends="wp8.configure" if="is.windows" >
-        <macro-preprocess-release />
-		<macro-cocos command="compile -p wp8 -m release" />
-    </target>
-
-    <target name="runwp8" description="run Wp8" depends="wp8.configure" if="is.windows" >
-        <macro-preprocess-release />
-		<macro-cocos command="run -p wp8 -m release" />
-    </target>
-    
-    <target name="debugwp8" description="Debug Wp8" depends="wp8.configure" if="is.windows" >
-        <macro-preprocess-debug />
-		<macro-cocos command="run -p wp8 -m debug" />
-    </target>
-
    
     <!-- Hint: Remove unwanted projects from 'depends=' -->
-    <target name="all" description="Make all release targets" depends="web,android,ios,mac,linux,win32" > <!--,win8.1,wp8-->
+    <target name="all" description="Make all release targets" depends="web,android,ios,mac,linux,win32" > <!--,win8.1-->
         
     </target>
     
